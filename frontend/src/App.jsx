@@ -19,7 +19,7 @@ function App() {
       })
 
     // Fetch team info
-    fetch("http://localhost:8000/team")
+    fetch("http://localhost:8000/teams")
       .then(res => res.json())
       .then(json => setTeam(json))
       .catch(err => console.error("Error:", err))
