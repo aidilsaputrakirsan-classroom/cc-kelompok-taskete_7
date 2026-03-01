@@ -71,3 +71,34 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 | 9-11 | CI/CD Pipeline | ⬜ |
 | 12-14 | Microservices | ⬜ |
 | 15-16 | Final & UAS | ⬜ |
+
+
+## 📁 Project Structure
+
+```
+cc-kelompok-taskete_7/
+├── backend/
+│   ├── main.py
+│   ├── requirements.txt
+│   └── frontend/
+│       ├── src/
+│       ├── public/
+│       ├── index.html
+│       ├── package.json
+│       └── ...
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── index.html
+│   ├── package.json
+│   └── ...
+├── docs/
+│   ├── member-[iqbal].md
+│   ├── member-[Irwan].md
+│   ├── member-[opi].md
+│   └── member-Amalia-Tiara-Rezfani.md
+├── README.md
+└── ...
+```
+
+*Struktur ini akan berkembang sesuai milestone mingguan.*
