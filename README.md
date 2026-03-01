@@ -26,7 +26,6 @@ Masalah utama yang diselesaikan oleh aplikasi ini adalah ketidakefisienan dalam 
 
 ## 🏗️ Architecture
 
-```
 ```mermaid
 graph LR
     subgraph "Client Side (Broad Network Access Ready)"
@@ -47,7 +46,6 @@ graph LR
             F --- G
         end
     end
-```
 
 *(Diagram ini akan berkembang setiap minggu)*
 
