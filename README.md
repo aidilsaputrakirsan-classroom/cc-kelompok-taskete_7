@@ -9,7 +9,7 @@ untuk siapa, masalah apa yang diselesaikan.
 |------|-----|-------|
 | ...  | ... | Lead Backend |
 | Irwan Maulana  | 10231046 | Lead Frontend |
-| Rayhan Iqbak  | 10231080 | Lead DevOps |
+| Rayhan Iqbal  | 10231080 | Lead DevOps |
 | ...  | ... | Lead QA & Docs |
 
 ## 🛠️ Tech Stack
