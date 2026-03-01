@@ -97,8 +97,9 @@ cc-kelompok-taskete_7/
 │   ├── member-[Irwan].md
 │   ├── member-[opi].md
 │   └── member-Amalia-Tiara-Rezfani.md
-├── README.md
-└── ...
+├── .gitignore
+│  
+└── README.md
 ```
 
 *Struktur ini akan berkembang sesuai milestone mingguan.*
