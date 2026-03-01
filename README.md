@@ -98,7 +98,6 @@ cc-kelompok-taskete_7/
 │   ├── member-[opi].md
 │   └── member-Amalia-Tiara-Rezfani.md
 ├── .gitignore
-│  
 └── README.md
 ```
 
