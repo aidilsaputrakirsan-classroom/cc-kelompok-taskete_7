@@ -27,7 +27,26 @@ Masalah utama yang diselesaikan oleh aplikasi ini adalah ketidakefisienan dalam 
 ## 🏗️ Architecture
 
 ```
-[React Frontend] <--HTTP--> [FastAPI Backend] <--SQL--> [PostgreSQL]
+```mermaid
+graph LR
+    subgraph "Client Side (Broad Network Access Ready)"
+        A[User/Karyawan] -->|HTTP Request| B(Web Browser)
+    end
+
+    subgraph "Infrastructure (Local/On-Premise)"
+        B -->|Port 5000| C[Python Backend - Flask/FastAPI]
+        
+        subgraph "Backend Logic"
+            C --> D{Business Logic}
+            D -->|Check Identity| E[Data Tim / Team Data]
+            D -->|Validation| F[Logika Pengajuan Cuti]
+        end
+        
+        subgraph "Data Storage (Resource Pooling Concept)"
+            E --- G[(Local JSON Storage)]
+            F --- G
+        end
+    end
 ```
 
 *(Diagram ini akan berkembang setiap minggu)*
