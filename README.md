@@ -8,7 +8,7 @@ untuk siapa, masalah apa yang diselesaikan.
 | Nama | NIM | Peran |
 |------|-----|-------|
 | ...  | ... | Lead Backend |
-| ...  | ... | Lead Frontend |
+| Irwan Maulana  | 10231046 | Lead Frontend |
 | ...  | ... | Lead DevOps |
 | ...  | ... | Lead QA & Docs |
 
@@ -45,12 +45,18 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
+Buka http://localhost:8000 untuk verifikasi API berjalan.
+
+Buka http://localhost:8000/docs untuk melihat dokumentasi Swagger.
+
 ### Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
+Buka http://localhost:5173 untuk melihat aplikasi.
 
 ## 📅 Roadmap
 
