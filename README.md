@@ -10,7 +10,7 @@ untuk siapa, masalah apa yang diselesaikan.
 | ...  | ... | Lead Backend |
 | Irwan Maulana  | 10231046 | Lead Frontend |
 | Rayhan Iqbal  | 10231080 | Lead DevOps |
-| ...  | ... | Lead QA & Docs |
+| Amalia Tiara Rezfani  | 10231012 | Lead QA & Docs |
 
 ## 🛠️ Tech Stack
 
