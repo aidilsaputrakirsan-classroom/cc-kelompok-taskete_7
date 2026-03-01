@@ -7,7 +7,7 @@ untuk siapa, masalah apa yang diselesaikan.
 
 | Nama | NIM | Peran |
 |------|-----|-------|
-| ...  | ... | Lead Backend |
+| Noviansyah  | 10231072 | Lead Backend |
 | Irwan Maulana  | 10231046 | Lead Frontend |
 | Rayhan Iqbal  | 10231080 | Lead DevOps |
 | Amalia Tiara Rezfani  | 10231012 | Lead QA & Docs |
