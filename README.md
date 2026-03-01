@@ -46,6 +46,7 @@ graph LR
             F --- G
         end
     end
+```
 
 *(Diagram ini akan berkembang setiap minggu)*
 
