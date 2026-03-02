@@ -97,26 +97,51 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 ```
 cc-kelompok-taskete_7/
 ├── backend/
+│   ├── __pycache__/
+│   │   └── main.cpython-313.pyc
+│   ├── frontend/
+│   │   ├── public/
+│   │   │   └── vite.svg
+│   │   ├── src/
+│   │   │   ├── assets/
+│   │   │   │   └── react.svg
+│   │   │   ├── App.css
+│   │   │   ├── App.jsx
+│   │   │   ├── index.css
+│   │   │   └── main.jsx
+│   │   ├── .gitignore
+│   │   ├── eslint.config.js
+│   │   ├── index.html
+│   │   ├── package.json
+│   │   ├── README.md
+│   │   └── vite.config.js
 │   ├── main.py
-│   ├── requirements.txt
-│   └── frontend/
-│       ├── src/
-│       ├── public/
-│       ├── index.html
-│       ├── package.json
-│       └── ...
-├── frontend/
-│   ├── src/
-│   ├── public/
-│   ├── index.html
-│   ├── package.json
-│   └── ...
+│   ├── package-lock.json
+│   └── requirements.txt
 ├── docs/
 │   ├── member-[iqbal].md
 │   ├── member-[Irwan].md
 │   ├── member-[opi].md
 │   └── member-Amalia-Tiara-Rezfani.md
+├── frontend/
+│   ├── public/
+│   │   └── vite.svg
+│   ├── src/
+│   │   ├── assets/
+│   │   │   └── react.svg
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── README.md
+│   └── vite.config.js
 ├── .gitignore
+├── package-lock.json
 └── README.md
 ```
 
