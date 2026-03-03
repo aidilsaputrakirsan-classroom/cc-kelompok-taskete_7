@@ -146,3 +146,6 @@ cc-kelompok-taskete_7/
 ```
 
 *Struktur ini akan berkembang sesuai milestone mingguan.*
+
+
+## Modul 2 
