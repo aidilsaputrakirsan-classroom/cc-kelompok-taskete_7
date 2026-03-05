@@ -82,7 +82,7 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 | Minggu | Target | Status |
 |--------|--------|--------|
 | 1 | Setup & Hello World | ✅ |
-| 2 | REST API + Database | ⬜ |
+| 2 | REST API + Database | ✅ |
 | 3 | React Frontend | ⬜ |
 | 4 | Full-Stack Integration | ⬜ |
 | 5-7 | Docker & Compose | ⬜ |
@@ -97,28 +97,18 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 ```
 cc-kelompok-taskete_7/
 ├── backend/
-│   ├── __pycache__/
-│   │   └── main.cpython-313.pyc
-│   ├── frontend/
-│   │   ├── public/
-│   │   │   └── vite.svg
-│   │   ├── src/
-│   │   │   ├── assets/
-│   │   │   │   └── react.svg
-│   │   │   ├── App.css
-│   │   │   ├── App.jsx
-│   │   │   ├── index.css
-│   │   │   └── main.jsx
-│   │   ├── .gitignore
-│   │   ├── eslint.config.js
-│   │   ├── index.html
-│   │   ├── package.json
-│   │   ├── README.md
-│   │   └── vite.config.js
-│   ├── main.py
-│   ├── package-lock.json
-│   └── requirements.txt
+│   ├── .env.example         # Template konfigurasi database
+│   ├── crud.py              # Fungsi CRUD (business logic)
+│   ├── database.py          # Koneksi PostgreSQL via SQLAlchemy
+│   ├── main.py              # Entry point, FastAPI endpoints
+│   ├── models.py            # SQLAlchemy models (tabel database)
+│   ├── requirements.txt     # Python dependencies
+│   ├── schemas.py           # Pydantic validation schemas
+│   └── setup.sh             # Script setup otomatis
 ├── docs/
+│   ├── screenshots/         # Screenshot hasil testing API
+│   ├── api-test-results.md  # Dokumentasi hasil testing endpoint
+│   ├── database-schema.md   # Schema database (tabel, kolom, tipe data)
 │   ├── member-[iqbal].md
 │   ├── member-[Irwan].md
 │   ├── member-[opi].md
@@ -136,12 +126,10 @@ cc-kelompok-taskete_7/
 │   ├── .gitignore
 │   ├── eslint.config.js
 │   ├── index.html
-│   ├── package-lock.json
 │   ├── package.json
 │   ├── README.md
 │   └── vite.config.js
 ├── .gitignore
-├── package-lock.json
 └── README.md
 ```
 
