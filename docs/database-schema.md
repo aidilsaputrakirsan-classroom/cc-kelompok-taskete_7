@@ -47,7 +47,9 @@ Tabel utama untuk menyimpan data inventory/item.
 
 ---
 
-## SQL Equivalent
+## SQL Equivalent (Referensi Saja)
+
+> **Catatan:** SQL di bawah ini **TIDAK perlu dijalankan manual**. Tabel dibuat otomatis oleh SQLAlchemy saat server pertama kali dijalankan via `Base.metadata.create_all(bind=engine)` di `main.py`. SQL ini hanya sebagai referensi untuk memahami struktur tabel yang dibuat.
 
 ```sql
 CREATE TABLE items (
