@@ -146,3 +146,11 @@ cc-kelompok-taskete_7/
 ```
 
 *Struktur ini akan berkembang sesuai milestone mingguan.*
+
+
+# Modul 2 
+## Workshop 2.
+
+
+1. Setup Database
+
