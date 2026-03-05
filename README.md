@@ -138,6 +138,8 @@ cc-kelompok-taskete_7/
 
 # Modul 2 - API Endpoints
 
+Berikut merupakan daftar endpoint pada REST API yang digunakan untuk mengelola data item serta menampilkan informasi sistem.
+
 | Method  | Endpoint | Deskripsi |
 |----------|----------|----------|
 | POST   |```/items``` | Menambahkan data item baru ke dalam database|
