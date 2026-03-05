@@ -26,7 +26,18 @@ app.add_middleware(
 )
 
 
-# ==================== HEALTH CHECK ====================
+# ==================== ROOT & HEALTH CHECK ====================
+
+@app.get("/")
+def root():
+    """Root endpoint."""
+    return {
+        "message": "Welcome to Cloud App API",
+        "status": "running",
+        "version": "0.2.0",
+        "docs": "/docs",
+    }
+
 
 @app.get("/health")
 def health_check():
