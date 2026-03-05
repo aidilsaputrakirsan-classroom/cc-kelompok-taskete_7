@@ -149,8 +149,9 @@ cc-kelompok-taskete_7/
 
 
 # Modul 2 
-## Workshop 2.
+## API Endpoints
 
-
-1. Setup Database
-
+| Method  | Endpoint | Deskripsi |
+|----------|----------|----------|
+| GET   | /health   | Mengecek apakah API dan server berjalan normal   |
+| GET    | /team   | ...  |
