@@ -172,10 +172,24 @@ URL : ```/items```
 
 Deskripsi : Digunakan untuk menambahkan data baru ke dalam database dan memvalidasinya melalui Pydantic. 
 
-Request Body : 
+Request Body :
+ ```
+ {
+   "name": "Laptop",
+    "description": "Laptop untuk cloud computing",
+    "price": 15000000,
+    "quatity": 5,
+ }  
+```
 
-Response Example : 
-
+Response Example : 201 CREATED
+```
+{
+    "id": 1,
+    " "created_at": "2026-03-04T13:17:15.549271+08:00",
+    "updated_at": null
+}
+```
 
 ## Endpoint ```/items```
 ```
@@ -224,6 +238,9 @@ URL : ```/items/{item_id}```
 Deskripsi : Mengambil satu data spesifik berdasarkan ID 
 
 Request Body : 
+```
+http://127.0.0.1:80000/items?skip-0&limit-20
+```
 
 Response Example : 
 
