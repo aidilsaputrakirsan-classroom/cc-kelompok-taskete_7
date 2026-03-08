@@ -152,7 +152,8 @@ Berikut merupakan daftar endpoint pada REST API yang digunakan untuk mengelola d
 
 ## Endpoint ```/items```
 
-```@app.post("/items", response_model=ItemResponse, status_code=201)
+```
+@app.post("/items", response_model=ItemResponse, status_code=201)
 def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     """
     Buat item baru.
@@ -177,7 +178,8 @@ Response Example :
 
 
 ## Endpoint ```/items```
-```@app.get("/items", response_model=ItemListResponse)
+```
+@app.get("/items", response_model=ItemListResponse)
 def list_items(
     skip: int = Query(0, ge=0, description="Jumlah data yang di-skip"),
     limit: int = Query(20, ge=1, le=100, description="Jumlah data per halaman"),
@@ -205,7 +207,8 @@ Response Example :
 
 
 ## Endpoint ```/items/{item_id}```
-```@app.get("/items/{item_id}", response_model=ItemResponse)
+```
+@app.get("/items/{item_id}", response_model=ItemResponse)
 def get_item(item_id: int, db: Session = Depends(get_db)):
     """Ambil satu item berdasarkan ID."""
     item = crud.get_item(db=db, item_id=item_id)
@@ -227,7 +230,8 @@ Response Example :
 
 ## Endpoint ```/items/{item_id}```
 
-```\@app.put("/items/{item_id}", response_model=ItemResponse)
+```
+@app.put("/items/{item_id}", response_model=ItemResponse)
 def update_item(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
     """
     Update item berdasarkan ID.
@@ -251,7 +255,8 @@ Response Example :
 
 ## Endpoint ```/items/{item_id}```
 
-```@app.delete("/items/{item_id}", status_code=204)
+```
+@app.delete("/items/{item_id}", status_code=204)
 def delete_item(item_id: int, db: Session = Depends(get_db)):
     """Hapus item berdasarkan ID."""
     success = crud.delete_item(db=db, item_id=item_id)
@@ -272,7 +277,8 @@ Response Example :
 
 ## Endpoint ```/health```
 
-```@app.get("/health")
+```
+@app.get("/health")
 def health_check():
     """Endpoint untuk mengecek apakah API berjalan."""
     return {"status": "healthy", "version": "0.2.0"}
@@ -291,7 +297,8 @@ Response Example :
 
 ## Endpoint ```/team```
 
-```@app.get("/team")
+```
+@app.get("/team")
 def team_info():
     """Informasi tim."""
     return {
