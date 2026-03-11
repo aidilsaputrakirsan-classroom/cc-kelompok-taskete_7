@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from database import engine, get_db
 from models import Base
@@ -16,7 +17,7 @@ app = FastAPI(
     version="0.2.0",
 )
 
-# Konfigurasi CORS agar bisa diakses oleh Frontend nantinya
+# Konfigurasi CORS agar bisa diakses oleh Frontend React (localhost:5173)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -41,7 +42,7 @@ def root():
 
 @app.get("/health")
 def health_check():
-    """Endpoint untuk mengecek apakah API berjalan."""
+    """Endpoint untuk mengecek status API yang digunakan di Header Frontend"""
     return {"status": "healthy", "version": "0.2.0"}
 
 
@@ -49,7 +50,7 @@ def health_check():
 
 @app.post("/items", response_model=ItemResponse, status_code=201)
 def create_item(item: ItemCreate, db: Session = Depends(get_db)):
-    """Buat item baru dengan status code 201."""
+    """Buat item baru"""
     return crud.create_item(db=db, item_data=item)
 
 
@@ -60,46 +61,50 @@ def list_items(
     search: str = Query(None, description="Cari berdasarkan nama/deskripsi"),
     db: Session = Depends(get_db),
 ):
-    """Ambil daftar items dengan fitur pagination dan search."""
+    """Ambil daftar items dengan fitur pagination (skip & limit) dan search"""
     return crud.get_items(db=db, skip=skip, limit=limit, search=search)
 
 
-# TUGAS LEAD BACKEND: Endpoint statis harus di atas endpoint parameter {item_id}
+# TUGAS LEAD BACKEND: Endpoint statis digabung dan diletakkan di atas {item_id}
 @app.get("/items/stats")
 def get_items_stats(db: Session = Depends(get_db)):
     """
-    Menghitung statistik inventaris kelompok cc-kelompok-taskete_7:
-    - Total items
-    - Total value (Sum of price * quantity)
-    - Item termahal & termurah
+    Menghitung statistik lengkap untuk dashboard:
+    - Menggunakan agregasi SQL (func) agar lebih ringan daripada menarik semua data ke memori.
     """
-    items = db.query(crud.Item).all()
+    total_count = db.query(crud.Item).count()
     
-    if not items:
+    if total_count == 0:
         return {
-            "total_items": 0, 
-            "total_value": 0, 
-            "most_expensive": None, 
+            "total_count": 0,
+            "total_stock": 0,
+            "total_value": 0,
+            "average_price": 0,
+            "most_expensive": None,
             "cheapest": None
         }
+
+    # Menghitung agregat menggunakan fungsi database
+    total_stock = db.query(func.sum(crud.Item.quantity)).scalar() or 0
+    total_value = db.query(func.sum(crud.Item.price * crud.Item.quantity)).scalar() or 0
+    avg_price = db.query(func.avg(crud.Item.price)).scalar() or 0
     
-    # Hitung total nilai ekonomi inventaris
-    total_value = sum(item.price * item.quantity for item in items)
-    
-    # Cari item termahal dan termurah berdasarkan harga
-    most_expensive_item = max(items, key=lambda x: x.price)
-    cheapest_item = min(items, key=lambda x: x.price)
+    # Mencari item termahal dan termurah dengan ordering
+    most_expensive = db.query(crud.Item).order_by(crud.Item.price.desc()).first()
+    cheapest = db.query(crud.Item).order_by(crud.Item.price.asc()).first()
     
     return {
-        "total_items": len(items),
-        "total_value": total_value,
+        "total_count": total_count,
+        "total_stock": int(total_stock),
+        "total_value": float(total_value),
+        "average_price": round(float(avg_price), 2),
         "most_expensive": {
-            "name": most_expensive_item.name, 
-            "price": most_expensive_item.price
+            "name": most_expensive.name, 
+            "price": most_expensive.price
         },
         "cheapest": {
-            "name": cheapest_item.name,
-            "price": cheapest_item.price
+            "name": cheapest.name,
+            "price": cheapest.price
         },
     }
 
@@ -115,7 +120,7 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
 
 @app.put("/items/{item_id}", response_model=ItemResponse)
 def update_item(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
-    """Update item (Partial Update)."""
+    """Update item (Partial Update)"""
     updated = crud.update_item(db=db, item_id=item_id, item_data=item)
     if not updated:
         raise HTTPException(status_code=404, detail=f"Item dengan id={item_id} tidak ditemukan")
@@ -124,7 +129,7 @@ def update_item(item_id: int, item: ItemUpdate, db: Session = Depends(get_db)):
 
 @app.delete("/items/{item_id}", status_code=204)
 def delete_item(item_id: int, db: Session = Depends(get_db)):
-    """Hapus item berdasarkan ID."""
+    """Hapus item berdasarkan ID"""
     success = crud.delete_item(db=db, item_id=item_id)
     if not success:
         raise HTTPException(status_code=404, detail=f"Item dengan id={item_id} tidak ditemukan")
