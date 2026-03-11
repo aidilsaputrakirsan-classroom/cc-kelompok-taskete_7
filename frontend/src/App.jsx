@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import Header from "./components/Header"
 import SearchBar from "./components/SearchBar"
+import SortDropdown from "./components/SortDropdown"
 import ItemForm from "./components/ItemForm"
 import ItemList from "./components/ItemList"
 import { fetchItems, createItem, updateItem, deleteItem, checkHealth } from "./services/api"
@@ -13,6 +14,34 @@ function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState("newest")
+
+  // ==================== SORTING ====================
+  const sortedItems = useMemo(() => {
+    const sorted = [...items]
+    switch (sortBy) {
+      case "name_asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case "name_desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case "price_asc":
+        sorted.sort((a, b) => a.price - b.price)
+        break
+      case "price_desc":
+        sorted.sort((a, b) => b.price - a.price)
+        break
+      case "oldest":
+        sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        break
+      case "newest":
+      default:
+        sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        break
+    }
+    return sorted
+  }, [items, sortBy])
 
   // ==================== LOAD DATA ====================
   const loadItems = useCallback(async (search = "") => {
@@ -78,6 +107,10 @@ function App() {
     setEditingItem(null)
   }
 
+  const handleSortChange = (value) => {
+    setSortBy(value)
+  }
+
   // ==================== RENDER ====================
   return (
     <div style={styles.app}>
@@ -89,8 +122,9 @@ function App() {
           onCancelEdit={handleCancelEdit}
         />
         <SearchBar onSearch={handleSearch} />
+        <SortDropdown sortBy={sortBy} onSortChange={handleSortChange} />
         <ItemList
-          items={items}
+          items={sortedItems}
           onEdit={handleEdit}
           onDelete={handleDelete}
           loading={loading}
