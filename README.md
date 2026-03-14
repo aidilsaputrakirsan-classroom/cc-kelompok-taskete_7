@@ -106,6 +106,7 @@ cc-kelompok-taskete_7/
 │   ├── requirements.txt     # Python dependencies
 │   ├── schemas.py           # Pydantic validation schemas
 │   └── setup.sh             # Script setup otomatis
+│   
 ├── docs/
 │   ├── screenshots/
 │   │   ├── 1-keyboard.png
@@ -168,6 +169,7 @@ cc-kelompok-taskete_7/
 │   ├── package.json
 │   ├── README.md
 │   └── vite.config.js
+│ 
 ├── .gitignore
 ├── package-lock.json
 └── README.md
