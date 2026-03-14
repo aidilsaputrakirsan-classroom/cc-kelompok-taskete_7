@@ -117,9 +117,7 @@ cc-kelompok-taskete_7/
 │   │   ├── 5-check-updated-items.png
 │   │   ├── 6-search-items.png
 │   │   ├── 7-delete-items.png
-│   │   ├── 8-verify-delete.png
-│   │   └── main.jsx
-│   │   
+│   │   └── 8-verify-delete.png
 │   ├── api-test-results.md
 │   ├── database-schema.md
 │   ├── hapus semua items.png
@@ -148,9 +146,6 @@ cc-kelompok-taskete_7/
 │   ├── src/
 │   │   ├── assets/
 │   │   │   └── react.svg
-│   │   ├── App.css
-│   │   ├── App.jsx
-│   │   ├── api.js
 │   │   ├── components/
 │   │   │   ├── Header.jsx
 │   │   │   ├── ItemCard.jsx
@@ -158,9 +153,12 @@ cc-kelompok-taskete_7/
 │   │   │   ├── ItemList.jsx
 │   │   │   ├── SearchBar.jsx
 │   │   │   └── SortDropdown.jsx
-│   │   ├── index.css
 │   │   ├── services/
 │   │   │   └── api.js
+│   │   ├── api.js
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
 │   │   └── main.jsx
 │   ├── .env.example         # Template env frontend (Vite)
 │   ├── .gitignore
