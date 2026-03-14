@@ -83,7 +83,7 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 |--------|--------|--------|
 | 1 | Setup & Hello World | ✅ |
 | 2 | REST API + Database | ✅ |
-| 3 | React Frontend | ⬜ |
+| 3 | React Frontend | ✅ |
 | 4 | Full-Stack Integration | ⬜ |
 | 5-7 | Docker & Compose | ⬜ |
 | 8 | UTS Demo | ⬜ |
@@ -102,17 +102,46 @@ cc-kelompok-taskete_7/
 │   ├── database.py          # Koneksi PostgreSQL via SQLAlchemy
 │   ├── main.py              # Entry point, FastAPI endpoints
 │   ├── models.py            # SQLAlchemy models (tabel database)
+│   ├── package-lock.json    # Lockfile yang sempat ter-track
 │   ├── requirements.txt     # Python dependencies
 │   ├── schemas.py           # Pydantic validation schemas
 │   └── setup.sh             # Script setup otomatis
 ├── docs/
-│   ├── screenshots/         # Screenshot hasil testing API
-│   ├── api-test-results.md  # Dokumentasi hasil testing endpoint
-│   ├── database-schema.md   # Schema database (tabel, kolom, tipe data)
+│   ├── screenshots/
+│   │   ├── 1-keyboard.png
+│   │   ├── 1-laptop.png
+│   │   ├── 1-mouse.png
+│   │   ├── 2-list-all-items.png
+│   │   ├── 3-get-single-items.png
+│   │   ├── 4-update-items.png
+│   │   ├── 5-check-updated-items.png
+│   │   ├── 6-search-items.png
+│   │   ├── 7-delete-items.png
+│   │   ├── 8-verify-delete.png
+│   │   └── main.jsx
+│   │   
+│   ├── api-test-results.md
+│   ├── database-schema.md
+│   ├── hapus semua items.png
+│   ├── image.png
 │   ├── member-[iqbal].md
 │   ├── member-[Irwan].md
 │   ├── member-[opi].md
-│   └── member-Amalia-Tiara-Rezfani.md
+│   ├── member-Amalia-Tiara-Rezfani.md
+│   ├── Screenshot 2026-03-13 000253.png
+│   ├── Screenshot 2026-03-13 000522.png
+│   ├── Screenshot 2026-03-13 001113.png
+│   ├── Screenshot 2026-03-13 001332-1.png
+│   ├── Screenshot 2026-03-13 001332.png
+│   ├── Screenshot 2026-03-13 001656.png
+│   ├── Screenshot 2026-03-13 002120.png
+│   ├── Screenshot 2026-03-13 002343.png
+│   ├── Screenshot 2026-03-13 002531.png
+│   ├── Screenshot 2026-03-13 003134.png
+│   ├── Screenshot 2026-03-13 003226.png
+│   ├── Screenshot 2026-03-13 003353.png
+│   └── ui-test-results.md
+│
 ├── frontend/
 │   ├── public/
 │   │   └── vite.svg
@@ -121,15 +150,28 @@ cc-kelompok-taskete_7/
 │   │   │   └── react.svg
 │   │   ├── App.css
 │   │   ├── App.jsx
+│   │   ├── api.js
+│   │   ├── components/
+│   │   │   ├── Header.jsx
+│   │   │   ├── ItemCard.jsx
+│   │   │   ├── ItemForm.jsx
+│   │   │   ├── ItemList.jsx
+│   │   │   ├── SearchBar.jsx
+│   │   │   └── SortDropdown.jsx
 │   │   ├── index.css
+│   │   ├── services/
+│   │   │   └── api.js
 │   │   └── main.jsx
+│   ├── .env.example         # Template env frontend (Vite)
 │   ├── .gitignore
 │   ├── eslint.config.js
 │   ├── index.html
+│   ├── package-lock.json
 │   ├── package.json
 │   ├── README.md
 │   └── vite.config.js
 ├── .gitignore
+├── package-lock.json
 └── README.md
 ```
 
