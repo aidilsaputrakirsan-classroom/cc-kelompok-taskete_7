@@ -67,15 +67,14 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Dependency injection: ambil current user dari JWT token.
-    Gunakan di endpoint yang butuh autentikasi.
-    """
+    """Ambil user saat ini dari JWT token."""
     payload = decode_token(token)
     user_id = payload.get("sub")
     if user_id is None:
         raise HTTPException(status_code=401, detail="Token tidak valid")
     user_id = int(user_id)
+
+    user = db.query(User).filter(User.id == user_id).first()
 
     if user is None:
         raise HTTPException(
