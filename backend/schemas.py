@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -46,3 +46,37 @@ class ItemListResponse(BaseModel):
     """Schema untuk response list items dengan total count."""
     total: int
     items: list[ItemResponse]
+
+
+# ==================== USER / AUTH SCHEMAS ====================
+
+class UserCreate(BaseModel):
+    """Schema untuk registrasi user baru."""
+    email: EmailStr
+    name: str = Field(..., min_length=1, max_length=100, examples=["John Doe"])
+    password: str = Field(..., min_length=8, examples=["secret123"])
+
+
+class UserResponse(BaseModel):
+    """Schema untuk response user (tanpa password)."""
+    id: int
+    email: str
+    name: str
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class LoginRequest(BaseModel):
+    """Schema untuk login request."""
+    email: EmailStr
+    password: str
+
+
+class TokenResponse(BaseModel):
+    """Schema untuk response JWT token setelah login."""
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
