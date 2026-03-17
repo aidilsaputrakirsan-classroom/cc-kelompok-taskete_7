@@ -380,3 +380,111 @@ Deskripsi : Digunakan untuk menampilkan informasi tim pengembang API beserta nam
 Request Body : 
 
 Response Example :
+
+
+# Modul 3 - Frontend REACT - UI & API Integration
+
+1. Membuat Struktur Folder Bagian Frontend
+
+Pada langkah ini dilakukan pembuatan struktur folder pada bagian frontend untuk merapikan pengelompokan kode. Setelah masuk ke direktori frontend/src, dibuat dua folder utama yaitu components dan services. Folder components digunakan untuk menyimpan komponen antarmuka (UI) yang dapat digunakan kembali, sedangkan folder services digunakan untuk menampung logika layanan seperti pemanggilan API. Struktur ini membantu pengembangan menjadi lebih terorganisir dan memudahkan pemeliharaan kode.
+
+2. Membuat API Service Layer
+
+Pada langkah ini dibuat file api.js di dalam folder services yang berfungsi sebagai penghubung antara frontend dan backend. Di dalam file ini dituliskan berbagai fungsi untuk melakukan operasi CRUD seperti mengambil data (GET), menambahkan data (POST), mengubah data (PUT), dan menghapus data (DELETE). Selain itu, terdapat juga fungsi untuk mengecek status koneksi API. Dengan adanya service layer ini, pemanggilan API menjadi lebih terstruktur dan tidak ditulis berulang di berbagai komponen.
+
+3. Membuat Komponen Header dan SearchBar
+
+Pada langkah ini dibuat dua komponen utama yaitu Header dan SearchBar yang disimpan dalam folder components. Komponen Header digunakan untuk menampilkan informasi aplikasi seperti judul, jumlah item, dan status koneksi API. Sedangkan komponen SearchBar digunakan untuk melakukan pencarian data berdasarkan kata kunci yang dimasukkan oleh pengguna. Kedua komponen ini membantu meningkatkan pengalaman pengguna dalam berinteraksi dengan aplikasi.
+
+4. Membuat Komponen ItemForm
+
+Pada langkah ini dibuat komponen ItemForm yang berfungsi sebagai form untuk menambahkan dan mengedit data item. Form ini dilengkapi dengan validasi input seperti memastikan nama item tidak kosong dan harga lebih dari nol. Selain itu, form juga dapat menyesuaikan mode antara tambah dan edit berdasarkan data yang diterima. Komponen ini menjadi bagian penting dalam proses input data oleh pengguna.
+
+5. Membuat Komponen ItemCard dan ItemList
+Membuat dua komponen yaitu ItemCard dan ItemList. Komponen ItemCard digunakan untuk menampilkan informasi satu item secara detail seperti nama, harga, deskripsi, stok, dan tanggal. Sementara itu, ItemList berfungsi sebagai wadah untuk menampilkan seluruh data item dalam bentuk daftar atau grid. Komponen ini juga menangani kondisi seperti loading data dan tampilan ketika data masih kosong.
+
+6. Mengatur Root Component (App.jsx)
+Pada langkah ini dilakukan pengaturan komponen utama yaitu App.jsx yang berfungsi sebagai pusat pengendali aplikasi. Di dalamnya dikelola berbagai state seperti data item, status loading, koneksi API, dan data yang sedang diedit. Selain itu, ditambahkan juga fungsi untuk menangani operasi CRUD, pencarian data, serta pengambilan data dari API. Komponen ini menghubungkan semua komponen lain sehingga aplikasi dapat berjalan secara utuh.
+
+
+7. Mengatur CSS dan Styling
+dilakukan penyesuaian terhadap file App.css untuk mereset gaya bawaan dari Vite dan browser. Hal ini bertujuan agar tampilan aplikasi menjadi lebih konsisten dan rapi. Selain itu, ditambahkan juga efek sederhana pada elemen seperti input dan tombol untuk meningkatkan tampilan antarmuka.
+
+
+8. Menjalankan dan Menguji Aplikasi
+
+Pada langkah terakhir dilakukan proses menjalankan aplikasi menggunakan perintah npm run dev. Setelah itu, aplikasi dibuka melalui browser pada alamat http://localhost:5173. Pengujian dilakukan untuk memastikan seluruh fitur seperti menampilkan data, menambah, mengedit, menghapus, dan mencari item dapat berjalan dengan baik.
+
+### ✅ UI Test Result
+Testing dilakukan dengan melalui 10 Test Case. Berikut 10 Test Case pengujiannya:
+
+1. Cek Status API ✅
+2. Items dari Modul 2 muncul di daftar ✅
+3. Menambahkan item baru via form ✅
+4. Item muncul pada daftar ✅
+5. Melakukan klik edit pada Item ✅
+6. Form berisi data lama, Mengubah harga & klik update ✅
+7. Mencari Item via searchbar ✅
+8. Menghapus item & Confirm Dialog Muncul ✅
+9. Item akan hilang dari daftar ✅
+10.  Menghapus semua, dan muncul Empty State ✅
+    
+
+Hasil testing/penguujian tersebut terdapat pada file docs/ui-test-result.md 
+
+
+# Modul 4 - Testing End-to-End
+
+1. Muncul page login ✅
+![Gambar](Screenshotmodul4/1.png)
+
+
+2. Register User baru ✅
+![Gambar](Screenshotmodul4/2.png)
+
+3. Login otomatis setelah register ✅
+![Gambar](Screenshotmodul4/3.png)
+
+4. Main app & items muncul ✅
+![Gambar](Screenshotmodul4/4.png)
+
+5. Nama User di header ✅
+![Gambar](Screenshotmodul4/5.png)
+
+
+6. CRUD items berfungsi ✅
+
+- CREATE ITEMS  
+![Gambar](Screenshotmodul4/6.png)
+
+- READ ITEMS
+![Gambar](Screenshotmodul4/7.png)
+
+
+- UPDATE ITEMS
+![Gambar](Screenshotmodul4/8.png)
+
+- ITEMS TER-UPDATE
+![Gambar](Screenshotmodul4/9.png)
+
+- DELETE ITEMS
+![Gambar](Screenshotmodul4/10.png)
+
+7. Klick Logout ✅
+![Gambar](Screenshotmodul4/11.png)
+
+8. Kembali ke login page ✅
+![Gambar](Screenshotmodul4/12.png)
+
+9. Login dengan akun yang sudah dibuat sebelumnya ✅
+![Gambar](Screenshotmodul4/13.png)
+
+
+1.  Data items masih ada ✅
+![Gambar](Screenshotmodul4/14.png)
+
+
+
+
+
+
