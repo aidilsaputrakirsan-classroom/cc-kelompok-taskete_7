@@ -4,6 +4,7 @@ import SearchBar from "./components/SearchBar"
 import ItemForm from "./components/ItemForm"
 import ItemList from "./components/ItemList"
 import LoginPage from "./components/LoginPage"
+import { ToastContainer, useToast } from "./components/Toast"
 import {
   fetchItems, createItem, updateItem, deleteItem,
   checkHealth, login, register, setToken, clearToken,
@@ -22,15 +23,8 @@ function App() {
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
 
-  // ==================== NOTIFICATION STATE ====================
-  const [notification, setNotification] = useState(null)
-
-  const showNotification = (type, message) => {
-    setNotification({ type, message })
-    setTimeout(() => {
-      setNotification(null)
-    }, 3000)
-  }
+  // ==================== TOAST NOTIFICATIONS ====================
+  const { toasts, addToast, removeToast } = useToast()
 
   // ==================== LOAD DATA ====================
   const loadItems = useCallback(async (search = "") => {
@@ -42,6 +36,8 @@ function App() {
     } catch (err) {
       if (err.message === "UNAUTHORIZED") {
         handleLogout()
+      } else {
+        addToast("Gagal memuat data: " + err.message, "error")
       }
       console.error("Error loading items:", err)
     } finally {
@@ -50,7 +46,12 @@ function App() {
   }, [])
 
   useEffect(() => {
-    checkHealth().then(setIsConnected)
+    checkHealth().then((healthy) => {
+      setIsConnected(healthy)
+      if (!healthy) {
+        addToast("Backend tidak terhubung. Pastikan server berjalan.", "warning", 5000)
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -65,11 +66,13 @@ function App() {
     const data = await login(email, password)
     setUser(data.user)
     setIsAuthenticated(true)
+    addToast(`Selamat datang, ${data.user.name}! 👋`, "success")
   }
 
   const handleRegister = async (userData) => {
     // Register lalu otomatis login
     await register(userData)
+    addToast("Registrasi berhasil! Sedang login...", "info", 2000)
     await handleLogin(userData.email, userData.password)
   }
 
@@ -90,17 +93,18 @@ function App() {
       if (editId) {
         await updateItem(editId, itemData)
         setEditingItem(null)
-        showNotification("success", "Item berhasil diperbarui")
+        addToast(`Item "${itemData.name}" berhasil diperbarui! ✏️`, "success")
       } else {
         await createItem(itemData)
-        showNotification("success", "Item berhasil ditambahkan")
+        addToast(`Item "${itemData.name}" berhasil ditambahkan! 🎉`, "success")
       }
       loadItems(searchQuery)
     } catch (err) {
-      if (err.message === "UNAUTHORIZED") handleLogout()
-      else {
-        showNotification("error", "Gagal menyimpan item: " + err.message)
-        // Pertahankan perilaku lama: biarkan error menggelembung
+      if (err.message === "UNAUTHORIZED") {
+        handleLogout()
+        addToast("Sesi berakhir. Silakan login kembali.", "warning")
+      } else {
+        addToast("Gagal menyimpan item: " + err.message, "error")
         throw err
       }
     }
@@ -109,6 +113,7 @@ function App() {
   const handleEdit = (item) => {
     setEditingItem(item)
     window.scrollTo({ top: 0, behavior: "smooth" })
+    addToast(`Mengedit "${item.name}"`, "info", 2000)
   }
 
   const handleDelete = async (id) => {
@@ -116,13 +121,14 @@ function App() {
     if (!window.confirm(`Yakin ingin menghapus "${item?.name}"?`)) return
     try {
       await deleteItem(id)
+      addToast(`Item "${item?.name}" berhasil dihapus! 🗑️`, "success")
       loadItems(searchQuery)
     } catch (err) {
-      if (err.message === "UNAUTHORIZED") handleLogout()
-      else {
-        showNotification("error", "Gagal menghapus: " + err.message)
-        // Pertahankan perilaku lama: tetap tampilkan alert
-        alert("Gagal menghapus: " + err.message)
+      if (err.message === "UNAUTHORIZED") {
+        handleLogout()
+        addToast("Sesi berakhir. Silakan login kembali.", "warning")
+      } else {
+        addToast("Gagal menghapus: " + err.message, "error")
       }
     }
   }
@@ -136,25 +142,19 @@ function App() {
 
   // Jika belum login, tampilkan login page
   if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+    return (
+      <>
+        <ToastContainer toasts={toasts} onRemove={removeToast} />
+        <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+      </>
+    )
   }
 
   // Jika sudah login, tampilkan main app
   return (
     <div style={styles.app}>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
       <div style={styles.container}>
-        {notification && (
-          <div
-            style={{
-              ...styles.toast,
-              backgroundColor: notification.type === "success" ? "#E2EFDA" : "#FBE5D6",
-              color: notification.type === "success" ? "#37662A" : "#7F1F1F",
-              borderColor: notification.type === "success" ? "#A9D18E" : "#F4B183",
-            }}
-          >
-            {notification.message}
-          </div>
-        )}
         <Header
           totalItems={totalItems}
           isConnected={isConnected}
@@ -186,19 +186,6 @@ const styles = {
     fontFamily: "'Segoe UI', Arial, sans-serif",
   },
   container: { maxWidth: "900px", margin: "0 auto" },
-  toast: {
-    position: "fixed",
-    top: "1.5rem",
-    right: "1.5rem",
-    padding: "0.75rem 1.25rem",
-    borderRadius: "8px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-    fontSize: "0.9rem",
-    fontWeight: "600",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    zIndex: 1000,
-  },
 }
 
 export default App

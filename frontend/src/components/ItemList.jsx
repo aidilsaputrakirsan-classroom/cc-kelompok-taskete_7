@@ -1,8 +1,21 @@
 import ItemCard from "./ItemCard"
+import Spinner, { SkeletonCard } from "./Spinner"
 
 function ItemList({ items, onEdit, onDelete, loading }) {
   if (loading) {
-    return <p style={styles.message}>⏳ Memuat data...</p>
+    return (
+      <div>
+        <div style={styles.loadingHeader}>
+          <Spinner size={24} message="" />
+          <span style={styles.loadingText}>Memuat data...</span>
+        </div>
+        <div style={styles.grid}>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      </div>
+    )
   }
 
   if (items.length === 0) {
@@ -19,13 +32,19 @@ function ItemList({ items, onEdit, onDelete, loading }) {
 
   return (
     <div style={styles.grid}>
-      {items.map((item) => (
-        <ItemCard
+      {items.map((item, index) => (
+        <div
           key={item.id}
-          item={item}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+          style={{
+            animation: `fadeInUp 0.3s ease ${index * 0.05}s both`,
+          }}
+        >
+          <ItemCard
+            item={item}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        </div>
       ))}
     </div>
   )
@@ -37,11 +56,17 @@ const styles = {
     gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
     gap: "1rem",
   },
-  message: {
-    textAlign: "center",
-    color: "#888",
-    padding: "2rem",
-    fontSize: "1.1rem",
+  loadingHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    marginBottom: "1rem",
+  },
+  loadingText: {
+    color: "#1F4E79",
+    fontSize: "0.95rem",
+    fontWeight: 600,
   },
   empty: {
     textAlign: "center",
@@ -49,6 +74,7 @@ const styles = {
     backgroundColor: "#f8f9fa",
     borderRadius: "12px",
     border: "2px dashed #ddd",
+    animation: "fadeIn 0.3s ease",
   },
   emptyIcon: {
     fontSize: "3rem",

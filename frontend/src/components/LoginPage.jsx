@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { ButtonSpinner } from "./Spinner"
 
 function LoginPage({ onLogin, onRegister }) {
   const [isRegister, setIsRegister] = useState(false)
@@ -45,7 +46,10 @@ function LoginPage({ onLogin, onRegister }) {
   return (
     <div style={styles.wrapper}>
       <div style={styles.card}>
-        <h1 style={styles.title}>☁️ Cloud App</h1>
+        <div style={styles.logoContainer}>
+          <span style={styles.logo}>☁️</span>
+        </div>
+        <h1 style={styles.title}>Cloud App</h1>
         <p style={styles.subtitle}>Komputasi Awan — SI ITK</p>
 
         {/* Tab Switch */}
@@ -54,17 +58,21 @@ function LoginPage({ onLogin, onRegister }) {
             style={{ ...styles.tab, ...(isRegister ? {} : styles.tabActive) }}
             onClick={() => { setIsRegister(false); setError("") }}
           >
-            Login
+            🔐 Login
           </button>
           <button
             style={{ ...styles.tab, ...(isRegister ? styles.tabActive : {}) }}
             onClick={() => { setIsRegister(true); setError("") }}
           >
-            Register
+            📝 Register
           </button>
         </div>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {error && (
+          <div style={styles.error}>
+            <span>❌</span> {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} style={styles.form}>
           {isRegister && (
@@ -77,6 +85,7 @@ function LoginPage({ onLogin, onRegister }) {
                 onChange={handleChange}
                 placeholder="Nama Lengkap"
                 style={styles.input}
+                disabled={loading}
               />
             </div>
           )}
@@ -91,6 +100,7 @@ function LoginPage({ onLogin, onRegister }) {
               placeholder="email@student.itk.ac.id"
               required
               style={styles.input}
+              disabled={loading}
             />
           </div>
 
@@ -104,13 +114,40 @@ function LoginPage({ onLogin, onRegister }) {
               placeholder="Minimal 8 karakter"
               required
               style={styles.input}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" style={styles.btnSubmit} disabled={loading}>
-            {loading ? "⏳ Loading..." : isRegister ? "📝 Register" : "🔐 Login"}
+          <button
+            type="submit"
+            style={{
+              ...styles.btnSubmit,
+              ...(loading ? styles.btnDisabled : {}),
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <ButtonSpinner size={16} color="white" />{" "}
+                {isRegister ? "Mendaftarkan..." : "Masuk..."}
+              </>
+            ) : (
+              isRegister ? "📝 Register" : "🔐 Login"
+            )}
           </button>
         </form>
+
+        <p style={styles.footer}>
+          {isRegister
+            ? "Sudah punya akun? "
+            : "Belum punya akun? "}
+          <span
+            style={styles.link}
+            onClick={() => { setIsRegister(!isRegister); setError("") }}
+          >
+            {isRegister ? "Login di sini" : "Daftar di sini"}
+          </span>
+        </p>
       </div>
     </div>
   )
@@ -122,34 +159,45 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#1F4E79",
+    background: "linear-gradient(135deg, #1F4E79 0%, #2E75B6 50%, #1a365d 100%)",
     padding: "2rem",
     fontFamily: "'Segoe UI', Arial, sans-serif",
   },
   card: {
     backgroundColor: "white",
     padding: "2.5rem",
-    borderRadius: "16px",
+    borderRadius: "20px",
     width: "100%",
     maxWidth: "420px",
-    boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1)",
+    animation: "fadeInUp 0.5s ease",
+  },
+  logoContainer: {
+    textAlign: "center",
+    marginBottom: "0.25rem",
+  },
+  logo: {
+    fontSize: "3rem",
+    display: "inline-block",
+    animation: "fadeIn 0.8s ease",
   },
   title: {
     textAlign: "center",
     margin: "0 0 0.25rem 0",
     color: "#1F4E79",
-    fontSize: "2rem",
+    fontSize: "1.8rem",
+    fontWeight: 700,
   },
   subtitle: {
     textAlign: "center",
     color: "#888",
     margin: "0 0 1.5rem 0",
-    fontSize: "0.9rem",
+    fontSize: "0.85rem",
   },
   tabs: {
     display: "flex",
     marginBottom: "1.5rem",
-    borderRadius: "8px",
+    borderRadius: "10px",
     overflow: "hidden",
     border: "2px solid #e0e0e0",
   },
@@ -159,9 +207,10 @@ const styles = {
     border: "none",
     backgroundColor: "#f0f0f0",
     cursor: "pointer",
-    fontSize: "0.95rem",
+    fontSize: "0.9rem",
     fontWeight: "bold",
     color: "#888",
+    transition: "all 0.25s ease",
   },
   tabActive: {
     backgroundColor: "#1F4E79",
@@ -184,30 +233,59 @@ const styles = {
   },
   input: {
     padding: "0.75rem 1rem",
-    border: "2px solid #ddd",
-    borderRadius: "8px",
+    border: "2px solid #e0e0e0",
+    borderRadius: "10px",
     fontSize: "1rem",
     outline: "none",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   btnSubmit: {
-    padding: "0.8rem",
-    backgroundColor: "#548235",
+    padding: "0.85rem",
+    background: "linear-gradient(135deg, #548235 0%, #6aa03f 100%)",
     color: "white",
     border: "none",
-    borderRadius: "8px",
+    borderRadius: "10px",
     cursor: "pointer",
     fontSize: "1rem",
     fontWeight: "bold",
     marginTop: "0.5rem",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    transition: "all 0.25s ease",
+    boxShadow: "0 4px 12px rgba(84, 130, 53, 0.3)",
+  },
+  btnDisabled: {
+    opacity: 0.7,
+    cursor: "not-allowed",
   },
   error: {
-    backgroundColor: "#FBE5D6",
-    color: "#C00000",
+    backgroundColor: "#FFEBEE",
+    color: "#C62828",
     padding: "0.6rem 1rem",
-    borderRadius: "6px",
+    borderRadius: "8px",
     marginBottom: "0.5rem",
     fontSize: "0.9rem",
     textAlign: "center",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    border: "1px solid #FFCDD2",
+    animation: "fadeInUp 0.2s ease",
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: "1.25rem",
+    fontSize: "0.85rem",
+    color: "#888",
+  },
+  link: {
+    color: "#1F4E79",
+    fontWeight: "bold",
+    cursor: "pointer",
+    textDecoration: "underline",
   },
 }
 

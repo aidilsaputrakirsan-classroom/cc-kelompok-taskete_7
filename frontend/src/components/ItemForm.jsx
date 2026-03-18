@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { ButtonSpinner } from "./Spinner"
 
 function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
   const [formData, setFormData] = useState({
@@ -8,6 +9,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
     quantity: "0",
   })
   const [error, setError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   // Jika editingItem berubah, isi form dengan datanya
   useEffect(() => {
@@ -50,22 +52,32 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
       quantity: parseInt(formData.quantity) || 0,
     }
 
+    setSubmitting(true)
     try {
       await onSubmit(itemData, editingItem?.id)
       // Reset form setelah berhasil
       setFormData({ name: "", description: "", price: "", quantity: "0" })
     } catch (err) {
       setError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      ...styles.container,
+      ...(editingItem ? styles.containerEditing : {}),
+    }}>
       <h2 style={styles.title}>
         {editingItem ? "✏️ Edit Item" : "➕ Tambah Item Baru"}
       </h2>
 
-      {error && <div style={styles.error}>{error}</div>}
+      {error && (
+        <div style={styles.error}>
+          <span>❌</span> {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.row}>
@@ -78,6 +90,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
               onChange={handleChange}
               placeholder="Contoh: Laptop"
               style={styles.input}
+              disabled={submitting}
             />
           </div>
           <div style={styles.field}>
@@ -91,6 +104,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
               min="0"
               step="any"
               style={styles.input}
+              disabled={submitting}
             />
           </div>
         </div>
@@ -105,6 +119,7 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
               onChange={handleChange}
               placeholder="Opsional"
               style={styles.input}
+              disabled={submitting}
             />
           </div>
           <div style={{ ...styles.field, maxWidth: "150px" }}>
@@ -116,16 +131,36 @@ function ItemForm({ onSubmit, editingItem, onCancelEdit }) {
               onChange={handleChange}
               min="0"
               style={styles.input}
+              disabled={submitting}
             />
           </div>
         </div>
 
         <div style={styles.actions}>
-          <button type="submit" style={styles.btnSubmit}>
-            {editingItem ? "💾 Update Item" : "➕ Tambah Item"}
+          <button
+            type="submit"
+            style={{
+              ...styles.btnSubmit,
+              ...(submitting ? styles.btnDisabled : {}),
+            }}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <ButtonSpinner size={16} color="white" />{" "}
+                {editingItem ? "Menyimpan..." : "Menambahkan..."}
+              </>
+            ) : (
+              editingItem ? "💾 Update Item" : "➕ Tambah Item"
+            )}
           </button>
           {editingItem && (
-            <button type="button" onClick={onCancelEdit} style={styles.btnCancel}>
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              style={styles.btnCancel}
+              disabled={submitting}
+            >
               ✕ Batal Edit
             </button>
           )}
@@ -142,6 +177,11 @@ const styles = {
     borderRadius: "12px",
     border: "2px solid #e0e0e0",
     marginBottom: "1.5rem",
+    transition: "all 0.3s ease",
+  },
+  containerEditing: {
+    borderColor: "#1F4E79",
+    boxShadow: "0 0 0 3px rgba(31, 78, 121, 0.1)",
   },
   title: {
     margin: "0 0 1rem 0",
@@ -174,6 +214,7 @@ const styles = {
     borderRadius: "6px",
     fontSize: "0.95rem",
     outline: "none",
+    transition: "border-color 0.2s, box-shadow 0.2s",
   },
   actions: {
     display: "flex",
@@ -189,6 +230,15 @@ const styles = {
     cursor: "pointer",
     fontSize: "0.95rem",
     fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "0.5rem",
+    transition: "all 0.2s ease",
+  },
+  btnDisabled: {
+    opacity: 0.7,
+    cursor: "not-allowed",
   },
   btnCancel: {
     padding: "0.7rem 1.5rem",
@@ -198,14 +248,19 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
     fontSize: "0.95rem",
+    transition: "all 0.2s ease",
   },
   error: {
-    backgroundColor: "#FBE5D6",
-    color: "#C00000",
+    backgroundColor: "#FFEBEE",
+    color: "#C62828",
     padding: "0.6rem 1rem",
     borderRadius: "6px",
     marginBottom: "0.75rem",
     fontSize: "0.9rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    border: "1px solid #FFCDD2",
   },
 }
 
