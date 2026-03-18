@@ -22,6 +22,16 @@ function App() {
   const [editingItem, setEditingItem] = useState(null)
   const [searchQuery, setSearchQuery] = useState("")
 
+  // ==================== NOTIFICATION STATE ====================
+  const [notification, setNotification] = useState(null)
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message })
+    setTimeout(() => {
+      setNotification(null)
+    }, 3000)
+  }
+
   // ==================== LOAD DATA ====================
   const loadItems = useCallback(async (search = "") => {
     setLoading(true)
@@ -80,13 +90,19 @@ function App() {
       if (editId) {
         await updateItem(editId, itemData)
         setEditingItem(null)
+        showNotification("success", "Item berhasil diperbarui")
       } else {
         await createItem(itemData)
+        showNotification("success", "Item berhasil ditambahkan")
       }
       loadItems(searchQuery)
     } catch (err) {
       if (err.message === "UNAUTHORIZED") handleLogout()
-      else throw err
+      else {
+        showNotification("error", "Gagal menyimpan item: " + err.message)
+        // Pertahankan perilaku lama: biarkan error menggelembung
+        throw err
+      }
     }
   }
 
@@ -103,7 +119,11 @@ function App() {
       loadItems(searchQuery)
     } catch (err) {
       if (err.message === "UNAUTHORIZED") handleLogout()
-      else alert("Gagal menghapus: " + err.message)
+      else {
+        showNotification("error", "Gagal menghapus: " + err.message)
+        // Pertahankan perilaku lama: tetap tampilkan alert
+        alert("Gagal menghapus: " + err.message)
+      }
     }
   }
 
@@ -123,6 +143,18 @@ function App() {
   return (
     <div style={styles.app}>
       <div style={styles.container}>
+        {notification && (
+          <div
+            style={{
+              ...styles.toast,
+              backgroundColor: notification.type === "success" ? "#E2EFDA" : "#FBE5D6",
+              color: notification.type === "success" ? "#37662A" : "#7F1F1F",
+              borderColor: notification.type === "success" ? "#A9D18E" : "#F4B183",
+            }}
+          >
+            {notification.message}
+          </div>
+        )}
         <Header
           totalItems={totalItems}
           isConnected={isConnected}
@@ -154,6 +186,19 @@ const styles = {
     fontFamily: "'Segoe UI', Arial, sans-serif",
   },
   container: { maxWidth: "900px", margin: "0 auto" },
+  toast: {
+    position: "fixed",
+    top: "1.5rem",
+    right: "1.5rem",
+    padding: "0.75rem 1.25rem",
+    borderRadius: "8px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+    fontSize: "0.9rem",
+    fontWeight: "600",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    zIndex: 1000,
+  },
 }
 
 export default App
