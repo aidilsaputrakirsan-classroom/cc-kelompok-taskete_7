@@ -510,6 +510,25 @@ Login dengan akun yang sudah didaftar sebelumnya
 Masuk ke dalam halaman utama dan masih ada data items yang sebelumnya tidak dihapus.
 
 
+## Endpoint API 
+
+### API Endpoint List
+
+
+| No | Method | Endpoint        | Access        | Deskripsi                          |
+|----|--------|-----------------|---------------|------------------------------------|
+| 1  | GET   | ```/health ```         | Public        | Melakukan pengecekan kondisi server untuk memastikan API berjalan dengan baik   |
+| 2  | POST   | ```/auth/register ```  | Public        | Melakukan pendaftaran user baru dengan menyimpan data pengguna ke database      |
+| 3  | POST   | ```/auth/login```     | Protected | Melakukan proses login untuk memverifikasi user dan menghasilkan token autentikasi               |
+| 4  | GET    | ```/auth/me ```       | Protected | Mengambil informasi data user yang sedang login berdasarkan token yang diberikan                  |
+| 5  | POST   | ```/items```          | Protected | Menambahkan data item baru ke dalam database sesuai input yang diberikan pengguna              |
+| 6  | GET    | ```/items```          | Protected       | Mengambil seluruh data item dari database untuk ditampilkan ke pengguna      |
+| 7  | GET    | ```/items/{item_id}``` | Protected        |   Mengambil detail data item berdasarkan ID tertentu dari database      |
+| 8  | PUT    | ```/items/{item_id}``` | Protected       | Memperbarui atau mengubah data item yang sudah ada berdasarkan ID tertentu   |
+| 9  | DELETE | ```/items/{item_id}``` | Protected        |  Menghapus data item dari database berdasarkan ID yang dipilih       |
+| 10  | GET   | ```/team ```            | Public        | Mengambil informasi data tim pengembang yang ditampilkan pada aplikasi |
+
+
 
 
 
