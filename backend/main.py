@@ -1,27 +1,29 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordRequestForm # Import baru
 from sqlalchemy.orm import Session
 
 from database import engine, get_db
 from models import Base, User
 from schemas import (
-    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse,
-    UserCreate, UserResponse, LoginRequest, TokenResponse,
+    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse,
+    UserCreate, UserResponse, TokenResponse, # LoginRequest dihapus dari sini jika hanya dipakai di login
 )
 from auth import create_access_token, get_current_user
 import crud
 
 load_dotenv()
 
-# Buat semua tabel
+# Inisialisasi Database
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Cloud App API",
-    description="REST API untuk mata kuliah Komputasi Awan — SI ITK",
-    version="0.4.0",
+    description="REST API untuk mata kuliah Komputasi Awan — SI ITK. "
+                "Implementasi Integrasi Full-Stack & JWT Auth.",
+    version="0.4.2",
 )
 
 # ==================== CORS (FIXED) ====================
@@ -39,39 +41,43 @@ app.add_middleware(
 
 # ==================== HEALTH CHECK ====================
 
-@app.get("/health")
+@app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "healthy", "version": "0.4.0"}
+    return {"status": "healthy", "version": "0.4.2"}
 
 
 # ==================== AUTH ENDPOINTS (PUBLIC) ====================
 
-@app.post("/auth/register", response_model=UserResponse, status_code=201)
+@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED, tags=["Auth"])
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
     """
     Registrasi user baru.
-    
-    - **email**: Email unik (akan digunakan untuk login)
-    - **name**: Nama lengkap
-    - **password**: Minimal 8 karakter
     """
     user = crud.create_user(db=db, user_data=user_data)
     if not user:
-        raise HTTPException(status_code=400, detail="Email sudah terdaftar")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Pendaftaran gagal. Email mungkin sudah terdaftar."
+        )
     return user
 
 
-@app.post("/auth/login", response_model=TokenResponse)
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+@app.post("/auth/login", response_model=TokenResponse, tags=["Auth"])
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
-    Login dan dapatkan JWT token.
+    Login menggunakan OAuth2 Form Data (Kompatibel dengan tombol Authorize Swagger).
     
-    Token berlaku selama 60 menit (default).
-    Gunakan token di header: `Authorization: Bearer <token>`
+    - **username**: Masukkan email mahasiswa Anda.
+    - **password**: Masukkan password Anda.
     """
-    user = crud.authenticate_user(db=db, email=login_data.email, password=login_data.password)
+    # OAuth2RequestForm menggunakan field 'username' untuk identitas
+    user = crud.authenticate_user(db=db, email=form_data.username, password=form_data.password)
+    
     if not user:
-        raise HTTPException(status_code=401, detail="Email atau password salah")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, 
+            detail="Email atau password salah."
+        )
 
     token = create_access_token(data={"sub": str(user.id)})
     return {
@@ -81,25 +87,40 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     }
 
 
-@app.get("/auth/me", response_model=UserResponse)
+@app.get("/auth/me", response_model=UserResponse, tags=["Auth"])
 def get_me(current_user: User = Depends(get_current_user)):
-    """Ambil profil user yang sedang login."""
+    """Ambil profil user yang sedang login berdasarkan token."""
     return current_user
 
 
 # ==================== ITEM ENDPOINTS (PROTECTED) ====================
 
-@app.post("/items", response_model=ItemResponse, status_code=201)
+@app.get("/items/stats", response_model=ItemStatsResponse, tags=["Items"])
+def get_item_statistics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """**TUGAS 4: Get Statistics**"""
+    try:
+        return crud.get_item_stats(db=db)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Gagal memuat statistik: {str(e)}"
+        )
+
+
+@app.post("/items", response_model=ItemResponse, status_code=status.HTTP_201_CREATED, tags=["Items"])
 def create_item(
     item: ItemCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Buat item baru. **Membutuhkan autentikasi.**"""
+    """Buat item baru."""
     return crud.create_item(db=db, item_data=item)
 
 
-@app.get("/items", response_model=ItemListResponse)
+@app.get("/items", response_model=ItemListResponse, tags=["Items"])
 def list_items(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
@@ -107,56 +128,56 @@ def list_items(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ambil daftar items. **Membutuhkan autentikasi.**"""
+    """Ambil daftar items."""
     return crud.get_items(db=db, skip=skip, limit=limit, search=search)
 
 
-@app.get("/items/{item_id}", response_model=ItemResponse)
+@app.get("/items/{item_id}", response_model=ItemResponse, tags=["Items"])
 def get_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Ambil satu item. **Membutuhkan autentikasi.**"""
+    """Ambil detail item."""
     item = crud.get_item(db=db, item_id=item_id)
     if not item:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan.")
     return item
 
 
-@app.put("/items/{item_id}", response_model=ItemResponse)
+@app.put("/items/{item_id}", response_model=ItemResponse, tags=["Items"])
 def update_item(
     item_id: int,
     item: ItemUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Update item. **Membutuhkan autentikasi.**"""
+    """Update data item."""
     updated = crud.update_item(db=db, item_id=item_id, item_data=item)
     if not updated:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Gagal update.")
     return updated
 
 
-@app.delete("/items/{item_id}", status_code=204)
+@app.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Items"])
 def delete_item(
     item_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """Hapus item. **Membutuhkan autentikasi.**"""
+    """Hapus item."""
     success = crud.delete_item(db=db, item_id=item_id)
     if not success:
-        raise HTTPException(status_code=404, detail=f"Item {item_id} tidak ditemukan")
+        raise HTTPException(status_code=404, detail="Gagal menghapus.")
     return None
 
 
 # ==================== TEAM INFO ====================
 
-@app.get("/team")
+@app.get("/team", tags=["System"])
 def team_info():
     return {
-        "team": "cloud-team-XX",
+        "team": "cc-kelompok-taskete_7",
         "members": [
             {"name": "Nama 1", "nim": "NIM1", "role": "Lead Backend"},
             {"name": "Nama 2", "nim": "NIM2", "role": "Lead Frontend"},

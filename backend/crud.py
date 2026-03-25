@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from models import Item, User
 from schemas import ItemCreate, ItemUpdate, UserCreate
 from auth import hash_password, verify_password
 
+# ==================== ITEM CRUD ====================
 
 def create_item(db: Session, item_data: ItemCreate) -> Item:
     """Buat item baru di database."""
@@ -13,14 +14,8 @@ def create_item(db: Session, item_data: ItemCreate) -> Item:
     db.refresh(db_item)
     return db_item
 
-
 def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
-    """
-    Ambil daftar items dengan pagination & search.
-    - skip: jumlah data yang di-skip (untuk pagination)
-    - limit: jumlah data per halaman
-    - search: cari berdasarkan nama atau deskripsi
-    """
+    """Ambil daftar items dengan pagination & search."""
     query = db.query(Item)
     
     if search:
@@ -36,23 +31,17 @@ def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
     
     return {"total": total, "items": items}
 
-
 def get_item(db: Session, item_id: int) -> Item | None:
     """Ambil satu item berdasarkan ID."""
     return db.query(Item).filter(Item.id == item_id).first()
 
-
 def update_item(db: Session, item_id: int, item_data: ItemUpdate) -> Item | None:
-    """
-    Update item berdasarkan ID.
-    Hanya update field yang dikirim (bukan None).
-    """
+    """Update item berdasarkan ID dengan metode patch (exclude_unset)."""
     db_item = db.query(Item).filter(Item.id == item_id).first()
     
     if not db_item:
         return None
     
-    # Hanya update field yang dikirim (exclude_unset=True)
     update_data = item_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
         setattr(db_item, field, value)
@@ -61,9 +50,8 @@ def update_item(db: Session, item_id: int, item_data: ItemUpdate) -> Item | None
     db.refresh(db_item)
     return db_item
 
-
 def delete_item(db: Session, item_id: int) -> bool:
-    """Hapus item berdasarkan ID. Return True jika berhasil."""
+    """Hapus item berdasarkan ID."""
     db_item = db.query(Item).filter(Item.id == item_id).first()
     
     if not db_item:
@@ -73,6 +61,27 @@ def delete_item(db: Session, item_id: int) -> bool:
     db.commit()
     return True
 
+# ==================== TUGAS 4: STATS CRUD ====================
+
+def get_item_stats(db: Session):
+    """
+    Mengambil statistik inventaris menggunakan agregasi SQLAlchemy.
+    """
+    # Menghitung total item unik
+    total_items = db.query(Item).count()
+    
+    # Menghitung total stok (jumlah seluruh quantity)
+    total_stock = db.query(func.sum(Item.quantity)).scalar() or 0
+    
+    # Menghitung rata-rata harga
+    avg_price = db.query(func.avg(Item.price)).scalar() or 0
+    
+    return {
+        "total_items": total_items,
+        "total_stock": int(total_stock),
+        "average_price": round(float(avg_price), 2)
+    }
+
 # ==================== USER CRUD ====================
 
 def create_user(db: Session, user_data: UserCreate) -> User:
@@ -80,7 +89,7 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     # Cek apakah email sudah terdaftar
     existing = db.query(User).filter(User.email == user_data.email).first()
     if existing:
-        return None  # Email sudah dipakai
+        return None
 
     db_user = User(
         email=user_data.email,
@@ -92,9 +101,8 @@ def create_user(db: Session, user_data: UserCreate) -> User:
     db.refresh(db_user)
     return db_user
 
-
 def authenticate_user(db: Session, email: str, password: str) -> User | None:
-    """Autentikasi user: cek email & password."""
+    """Autentikasi user: verifikasi email & password."""
     user = db.query(User).filter(User.email == email).first()
     if not user:
         return None

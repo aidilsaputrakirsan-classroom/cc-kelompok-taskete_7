@@ -16,8 +16,12 @@ export function clearToken() {
   authToken = null
 }
 
+/**
+ * Helper untuk membuat header autentikasi.
+ * Menghapus Content-Type default agar bisa fleksibel di tiap fungsi.
+ */
 function authHeaders() {
-  const headers = { "Content-Type": "application/json" }
+  const headers = {}
   if (authToken) {
     headers["Authorization"] = `Bearer ${authToken}`
   }
@@ -34,7 +38,6 @@ async function handleResponse(response) {
     const error = await response.json().catch(() => ({}))
     throw new Error(error.detail || `Request gagal (${response.status})`)
   }
-  // 204 No Content
   if (response.status === 204) return null
   return response.json()
 }
@@ -50,12 +53,23 @@ export async function register(userData) {
   return handleResponse(response)
 }
 
+/**
+ * Update: Login sekarang menggunakan URLSearchParams (Form Data)
+ * agar kompatibel dengan OAuth2PasswordRequestForm di backend.
+ */
 export async function login(email, password) {
+  const params = new URLSearchParams()
+  params.append("username", email) // OAuth2 menggunakan key 'username'
+  params.append("password", password)
+
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    headers: { 
+      "Content-Type": "application/x-www-form-urlencoded" 
+    },
+    body: params,
   })
+  
   const data = await handleResponse(response)
   setToken(data.access_token)
   return data
@@ -82,10 +96,23 @@ export async function fetchItems(search = "", skip = 0, limit = 20) {
   return handleResponse(response)
 }
 
+/**
+ * Tugas 4: Fungsi baru untuk mengambil statistik item.
+ */
+export async function fetchItemStats() {
+  const response = await fetch(`${API_URL}/items/stats`, {
+    headers: authHeaders(),
+  })
+  return handleResponse(response)
+}
+
 export async function createItem(itemData) {
   const response = await fetch(`${API_URL}/items`, {
     method: "POST",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    headers: { 
+      ...authHeaders(), 
+      "Content-Type": "application/json" 
+    },
     body: JSON.stringify(itemData),
   })
   return handleResponse(response)
@@ -94,7 +121,10 @@ export async function createItem(itemData) {
 export async function updateItem(id, itemData) {
   const response = await fetch(`${API_URL}/items/${id}`, {
     method: "PUT",
-    headers: { ...authHeaders(), "Content-Type": "application/json" },
+    headers: { 
+      ...authHeaders(), 
+      "Content-Type": "application/json" 
+    },
     body: JSON.stringify(itemData),
   })
   return handleResponse(response)

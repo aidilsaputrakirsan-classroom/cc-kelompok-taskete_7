@@ -1,9 +1,10 @@
-from pydantic import BaseModel, Field, EmailStr
+import re
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import Optional
 from datetime import datetime
 
+# ==================== ITEM SCHEMAS ====================
 
-# === BASE SCHEMA ===
 class ItemBase(BaseModel):
     """Base schema — field yang dipakai untuk create & update."""
     name: str = Field(..., min_length=1, max_length=100, examples=["Laptop"])
@@ -12,53 +13,79 @@ class ItemBase(BaseModel):
     quantity: int = Field(0, ge=0, examples=[10])
 
 
-# === CREATE SCHEMA (untuk POST request) ===
 class ItemCreate(ItemBase):
-    """Schema untuk membuat item baru. Mewarisi semua field dari ItemBase."""
+    """Schema untuk membuat item baru."""
     pass
 
 
-# === UPDATE SCHEMA (untuk PUT request) ===
 class ItemUpdate(BaseModel):
-    """
-    Schema untuk update item. Semua field optional 
-    karena user mungkin hanya ingin update sebagian field.
-    """
+    """Schema untuk update item (semua field optional)."""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     description: Optional[str] = None
     price: Optional[float] = Field(None, gt=0)
     quantity: Optional[int] = Field(None, ge=0)
 
 
-# === RESPONSE SCHEMA (untuk output) ===
 class ItemResponse(ItemBase):
-    """Schema untuk response. Termasuk id dan timestamp dari database."""
+    """Schema untuk response item dari database."""
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True  # Agar bisa convert dari SQLAlchemy model
+        from_attributes = True
 
 
-# === LIST RESPONSE (dengan metadata) ===
 class ItemListResponse(BaseModel):
-    """Schema untuk response list items dengan total count."""
+    """Schema untuk response list items dengan metadata."""
     total: int
     items: list[ItemResponse]
+
+
+class ItemStatsResponse(BaseModel):
+    """
+    TUGAS 4: Schema untuk endpoint statistik.
+    Memberikan informasi ringkas mengenai inventaris.
+    """
+    total_items: int
+    total_stock: int
+    average_price: float
 
 
 # ==================== USER / AUTH SCHEMAS ====================
 
 class UserCreate(BaseModel):
-    """Schema untuk registrasi user baru."""
-    email: EmailStr
-    name: str = Field(..., min_length=1, max_length=100, examples=["John Doe"])
-    password: str = Field(..., min_length=8, examples=["secret123"])
+    """
+    TUGAS 4: Schema registrasi dengan validasi format & keamanan.
+    """
+    email: EmailStr = Field(..., examples=["nama@student.itk.ac.id"])
+    name: str = Field(..., min_length=2, max_length=100, examples=["John Doe"])
+    password: str = Field(..., min_length=8, examples=["StrongPass123!"])
+
+    @field_validator("email")
+    @classmethod
+    def validate_itk_email(cls, v: str) -> str:
+        """Validasi format email khusus domain ITK."""
+        if not v.endswith("@student.itk.ac.id"):
+            raise ValueError("Email harus menggunakan domain resmi @student.itk.ac.id")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, v: str) -> str:
+        """Validasi kekuatan password menggunakan Regex."""
+        # Pola: Min 8 karakter, 1 Huruf Besar, 1 Huruf Kecil, 1 Angka, 1 Simbol
+        pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+        if not re.match(pattern, v):
+            raise ValueError(
+                "Password terlalu lemah! Gunakan minimal 8 karakter dengan kombinasi "
+                "huruf besar, huruf kecil, angka, dan simbol (@$!%*?&)."
+            )
+        return v
 
 
 class UserResponse(BaseModel):
-    """Schema untuk response user (tanpa password)."""
+    """Schema untuk profil user (tanpa password)."""
     id: int
     email: str
     name: str
@@ -70,13 +97,13 @@ class UserResponse(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    """Schema untuk login request."""
+    """Schema untuk permintaan login."""
     email: EmailStr
     password: str
 
 
 class TokenResponse(BaseModel):
-    """Schema untuk response JWT token setelah login."""
+    """Schema untuk response setelah login berhasil."""
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
