@@ -1,51 +1,80 @@
-# API Documentation — Cloud App (SIMCUTI)
+# REST API — Cloud App (cc-kelompok-taskete_7)
 
-## Base URL (Development)
+Dokumen ini merangkum endpoint REST yang tersedia pada backend **Cloud App** (repository `cc-kelompok-taskete_7`).
 
-- `http://127.0.0.1:8000`
+```
+Base URL  : http://127.0.0.1:8000
+Swagger UI: http://127.0.0.1:8000/docs
+```
 
-> Sesuaikan dengan environment Anda. Di lokal, backend biasanya jalan di `http://127.0.0.1:8000`.
+## Token akses (JWT)
+
+Endpoint yang terproteksi akan memverifikasi token JWT. Sertakan header berikut pada request:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+Token biasanya didapat dari `POST /auth/login`.
 
 ---
 
 ## Ringkasan Endpoint
 
-| No | Method | URL                         | Deskripsi                             | Auth?      |
-|----|--------|-----------------------------|----------------------------------------|-----------|
-| 1  | GET    | `/health`                   | Cek status API                         | Tidak     |
-| 2  | POST   | `/auth/register`            | Registrasi user baru                   | Tidak     |
-| 3  | POST   | `/auth/login`               | Login dan dapatkan JWT token           | Tidak     |
-| 4  | GET    | `/auth/me`                  | Profil user yang sedang login          | **Wajib** |
-| 5  | POST   | `/items`                    | Buat item baru                         | **Wajib** |
-| 6  | GET    | `/items`                    | List items + pagination + search       | **Wajib** |
-| 7  | GET    | `/items/{item_id}`          | Detail item by ID                      | **Wajib** |
-| 8  | PUT    | `/items/{item_id}`          | Update item by ID                      | **Wajib** |
-| 9  | DELETE | `/items/{item_id}`          | Hapus item by ID                       | **Wajib** |
-| 10 | GET    | `/team`                     | Informasi tim developer                | Tidak     |
+### Sistem (publik)
+
+
+| Metode | Endpoint | Deskripsi | Perlu JWT? |
+| ------ | --------- | -------------------- | -------------- |
+| `GET`  | `/health` | Cek status API       | Tidak          |
+| `GET`  | `/team`   | Menampilkan data tim | Tidak          |
+
+
+### Autentikasi
+
+
+| Metode | Endpoint | Fungsi | Perlu JWT? |
+| ------ | ---------------- | ------------------------------------- | -------------- |
+| `POST` | `/auth/register` | Registrasi user baru                  | Tidak          |
+| `POST` | `/auth/login`    | Login dan mendapatkan JWT token       | Tidak          |
+| `GET`  | `/auth/me`       | Melihat profil user yang sedang login | Ya             |
+
+
+### Item (butuh JWT)
+
+
+| Metode | Endpoint | Keterangan | Perlu JWT? |
+| -------- | ------------------ | --------------------------------------------------- | -------------- |
+| `GET`    | `/items/stats`     | Statistik item (jumlah item, stok, rata-rata harga) | Ya             |
+| `POST`   | `/items`           | Menambahkan item baru                               | Ya             |
+| `GET`    | `/items`           | List items + search + pagination                    | Ya             |
+| `GET`    | `/items/{item_id}` | Detail item berdasarkan ID                          | Ya             |
+| `PUT`    | `/items/{item_id}` | Update item berdasarkan ID                          | Ya             |
+| `DELETE` | `/items/{item_id}` | Hapus item berdasarkan ID                           | Ya             |
+
 
 ---
 
-## 1. Health
+## Detail API
 
-### GET `/health`
+## A. System
 
-**Method**: `GET`  
-**URL**: `http://127.0.0.1:8000/health`
-**Deskripsi**: Mengecek apakah API sedang berjalan.
+### 1. Health Check
 
-- **Auth required**: Tidak
-- **Status sukses**: `200 OK`
-
-**Contoh Response**
+- URL: `/health`
+- Method: `GET`
+- Auth Required?: ❌ No
+- Request Body: `none`
+- Response (200 OK):
 
 ```json
 {
   "status": "healthy",
-  "version": "0.4.0"
+  "version": "0.4.2"
 }
 ```
 
-**Contoh curl**
+- curl
 
 ```bash
 curl -X 'GET' \
@@ -53,44 +82,94 @@ curl -X 'GET' \
   -H 'accept: application/json'
 ```
 
+- request url
+
+```text
+http://127.0.0.1:8000/health
+```
+
+### 2. Team Info
+
+- URL: `/team`
+- Method: `GET`
+- Auth Required?: ❌ No
+- Request Body: `none`
+- Response (200 OK):
+
+```json
+{
+  "team": "cc-kelompok-taskete_7",
+  "members": [
+    {
+      "name": "Noviansyah",
+      "nim": "10231072",
+      "role": "Lead Backend"
+    },
+    {
+      "name": "Irwan Maulana",
+      "nim": "10231046",
+      "role": "Lead Frontend"
+    },
+    {
+      "name": "Rayhan Iqbal",
+      "nim": "10231080",
+      "role": "Lead DevOps"
+    },
+    {
+      "name": "Amalia Tiara Rezfani",
+      "nim": "10231012",
+      "role": "Lead QA & Docs"
+    }
+  ]
+}
+```
+
+- curl
+
+```bash
+curl -X 'GET' \
+  'http://127.0.0.1:8000/team' \
+  -H 'accept: application/json'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/team
+```
+
 ---
 
-## 2. Authentication
+## B. Authentication
 
-### 2.1 Register
+### 1. Register
 
-#### POST  `/auth/register`  
-
-**Method**: `POST`  
-**URL**: `http://127.0.0.1:8000/auth/register`
-**Deskripsi**: Registrasi user baru.
-
-- **Auth required**: Tidak
-- **Status sukses**: `201 Created`
-
-**Request Body**
+- URL: `/auth/register`
+- Method: `POST`
+- Auth Required?: ❌ No
+- Request Body:
 
 ```json
 {
-  "email": "user1@student.itk.ac.id",
-  "name": "Nama Lengkap",
-  "password": "password123"
+  "email": "nama1@student.itk.ac.id",
+  "name": "John Doe1",
+  "password": "StrongPass1234!"
 }
 ```
 
-**Response (201)**
+- Response (201 Created):
 
 ```json
 {
-  "id": 7,
-  "email": "user1@student.itk.ac.id",
-  "name": "Nama Lengkap",
+  "id": 12,
+  "email": "nama1@student.itk.ac.id",
+  "name": "John Doe1",
   "is_active": true,
-  "created_at": "2026-03-18T09:55:33.764894+08:00"
+  "created_at": "2026-03-26T09:13:05.733646+08:00"
 }
 ```
 
-**Contoh curl**
+- curl
 
 ```bash
 curl -X 'POST' \
@@ -98,301 +177,374 @@ curl -X 'POST' \
   -H 'accept: application/json' \
   -H 'Content-Type: application/json' \
   -d '{
-  "email": "user1@student.itk.ac.id",
-  "name": "Nama Lengkap",
-  "password": "password123"
+  "email": "nama1@student.itk.ac.id",
+  "name": "John Doe1",
+  "password": "StrongPass1234!"
 }'
 ```
 
----
+- request url
 
-### 2.2 Login
-
-#### POST `/auth/login` 
-
-**Method**: `POST`  
-**URL**:  `http://127.0.0.1:8000/auth/login`
-**Deskripsi**: Login dan mendapatkan JWT access token.
-
-- **Auth required**: Tidak
-- **Status sukses**: `200 OK`
-
-**Request Body**
-
-```json
-{
-  "email": "user1@student.itk.ac.id",
-  "password": "password123"
-}
+```text
+http://127.0.0.1:8000/auth/register
 ```
 
-**Response (200)**
+### 2. Login
+
+- URL: `/auth/login`
+- Method: `POST`
+- Auth Required?: ❌ No
+- Request Body: `application/x-www-form-urlencoded`
+
+
+| Field    | Type   | Required | Description                                   |
+| -------- | ------ | -------- | --------------------------------------------- |
+| username | String | ✅ Yes    | Email user (contoh: `user@student.itk.ac.id`) |
+| password | String | ✅ Yes    | Password user                                 |
+
+
+- Response (200 OK):
 
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI3IiwiZXhwIjoxNzczODAyNjUzfQ.mj2q_N0sdGTS18G7hautCuFm1s_5hXPNEpCazrgwPwU",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTMzNH0.q1R5_3rrVWG1tKY-3cfoteIsYERm-OPq08A5G-yTzeA",
   "token_type": "bearer",
   "user": {
-    "id": 7,
-    "email": "user1@student.itk.ac.id",
-    "name": "Nama Lengkap",
+    "id": 12,
+    "email": "nama1@student.itk.ac.id",
+    "name": "John Doe1",
     "is_active": true,
-    "created_at": "2026-03-18T09:55:33.764894+08:00"
+    "created_at": "2026-03-26T09:13:05.733646+08:00"
   }
 }
 ```
 
-**Contoh curl**
+- curl
 
 ```bash
 curl -X 'POST' \
   'http://127.0.0.1:8000/auth/login' \
   -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "email": "user1@student.itk.ac.id",
-  "password": "password123"
-}'
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password&username=nama1%40student.itk.ac.id&password=StrongPass1234!&scope=&client_id=string&client_secret=string'
 ```
 
----
+- request url
 
-### 2.3 Get Current User
+```text
+http://127.0.0.1:8000/auth/login
+```
 
-#### GET `/auth/me`
+### 3. Get Current User
 
-**Method**: `GET`  
-**URL**: `http://127.0.0.1:8000/auth/me`
-**Deskripsi**: Mengambil profil user yang sedang login.
+- URL: `/auth/me`
+- Method: `GET`
+- Auth Required?: ✅ Yes
+- Request Body: `none`
+- Header wajib:
 
-- **Auth required**: **Ya** (`Authorization: Bearer <access_token>`)
-- **Status sukses**: `200 OK`
+```text
+Authorization: Bearer JWT_TOKEN_STRING
+```
 
-**Response (200)**
+- Response (200 OK):
 
 ```json
 {
-  "id": 0,
-  "email": "string",
-  "name": "string",
+  "id": 12,
+  "email": "nama1@student.itk.ac.id",
+  "name": "John Doe1",
   "is_active": true,
-  "created_at": "2026-03-18T03:06:29.421Z"
+  "created_at": "2026-03-26T09:13:05.733646+08:00"
 }
 ```
 
-**Contoh curl**
+- curl
 
 ```bash
 curl -X 'GET' \
   'http://127.0.0.1:8000/auth/me' \
-  -H 'accept: application/json'
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTQ4NH0.Qfb-QP0n3zlSsoqD2AqH2TUQUKyojTaGCBF9ancPXLE'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/auth/me
 ```
 
 ---
 
-## 3. Items (Protected)
+## C. Items (Protected)
 
-Semua endpoint `/items` **membutuhkan JWT token** di header:
+### 1. Item Statistics
 
-```text
-Authorization: Bearer <access_token>
-```
-
-### 3.1 Create Item
-
-#### POST `/items`
-
-**Method**: `POST`  
-**URL**: `http://127.0.0.1:8000/items`
-**Deskripsi**: Membuat item baru.
-
-- **Auth required**: Ya
-- **Status sukses**: `201 Created`
-
-**Request Body**
+- URL: `/items/stats`
+- Method: `GET`
+- Auth Required?: ✅ Yes
+- Request Body: `none`
+- Response (200 OK):
 
 ```json
 {
-  "name": "Laptop",
-  "description": "Laptop untuk cloud computing",
-  "price": 15000000,
-  "quantity": 10
-} 
-```
-
-**Response (201)**
-
-```json
-{
-  "name": "Laptop",
-  "description": "Laptop untuk cloud computing",
-  "price": 15000000,
-  "quantity": 10,
-  "id": 0,
-  "created_at": "2026-03-18T03:02:12.936Z",
-  "updated_at": "2026-03-18T03:02:12.936Z"
+  "total_items": 2,
+  "total_stock": 30,
+  "average_price": 12000000
 }
 ```
 
-**Contoh curl**
+- curl
+
+```bash
+curl -X 'GET' \
+  'http://127.0.0.1:8000/items/stats' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/items/stats
+```
+
+### 2. Create Item
+
+- URL: `/items`
+- Method: `POST`
+- Auth Required?: ✅ Yes
+- Request Body:
+
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 15000000,
+  "quantity": 15
+}
+```
+
+- Response (201 Created):
+
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 15000000,
+  "quantity": 15,
+  "id": 12,
+  "created_at": "2026-03-26T09:25:01.684260+08:00",
+  "updated_at": null
+}
+```
+
+- curl
 
 ```bash
 curl -X 'POST' \
   'http://127.0.0.1:8000/items' \
   -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4' \
   -H 'Content-Type: application/json' \
   -d '{
   "name": "Laptop",
   "description": "Laptop untuk cloud computing",
   "price": 15000000,
-  "quantity": 10
+  "quantity": 15
 }'
 ```
 
----
+- request url
 
-### 3.2 List Items
+```text
+http://127.0.0.1:8000/items
+```
 
-#### GET `/items`
+### 3. Get Items (List + Search + Pagination)
 
-**Method**: `GET`  
-**URL**: `http://127.0.0.1:8000/items?skip=12&limit=20&search=sad`
-**Deskripsi**: Mengambil daftar items dengan pagination dan search.
+- URL: `/items`
+- Method: `GET`
+- Auth Required?: ✅ Yes
+- Query Parameters:
 
-- **Auth required**: Ya
-- **Query params**:
-  - `skip` (default `0`)
-  - `limit` (default `20`, max `100`)
-  - `search` (opsional — cari nama/deskripsi)
-- **Status sukses**: `200 OK`
 
-**Response (200)**
+| Parameter | Type    | Required | Description                                       |
+| --------- | ------- | -------- | ------------------------------------------------- |
+| skip      | Integer | ❌ No     | Jumlah data yang dilewati (default `0`)           |
+| limit     | Integer | ❌ No     | Jumlah data per halaman (default `20`, max `100`) |
+| search    | String  | ❌ No     | Kata kunci pencarian nama/deskripsi               |
+
+
+- Response (200 OK):
 
 ```json
 {
-  "total": 0,
+  "total": 3,
   "items": [
     {
       "name": "Laptop",
       "description": "Laptop untuk cloud computing",
       "price": 15000000,
-      "quantity": 10,
-      "id": 0,
-      "created_at": "2026-03-18T03:19:42.746Z",
-      "updated_at": "2026-03-18T03:19:42.746Z"
+      "quantity": 15,
+      "id": 12,
+      "created_at": "2026-03-26T09:25:01.684260+08:00",
+      "updated_at": null
+    },
+    {
+      "name": "Laptop",
+      "description": "Laptop untuk cloud computing",
+      "price": 15000000,
+      "quantity": 15,
+      "id": 11,
+      "created_at": "2026-03-26T09:25:00.640355+08:00",
+      "updated_at": null
+    },
+    {
+      "name": "Laptop",
+      "description": "Laptop rtx 5060",
+      "price": 15000000,
+      "quantity": 20,
+      "id": 9,
+      "created_at": "2026-03-26T09:22:26.102013+08:00",
+      "updated_at": null
     }
   ]
 }
 ```
-
-**Contoh curl**
-
-```bash
-curl -X 'GET' \
-  'http://127.0.0.1:8000/items?skip=12&limit=20&search=sad' \
-  -H 'accept: application/json' 
-```
-
----
-
-### 3.3 Get Item by ID
-
-#### GET `/items/{item_id}`
-
-**Method**: `GET`  
-**URL**: `http://127.0.0.1:8000/items/1`
-**Deskripsi**: Mengambil satu item berdasarkan ID.
-
-- **Auth required**: Ya
-- **Status sukses**: `200 OK`
-- **Status jika tidak ditemukan**: `404 Not Found`
-
-**Contoh curl**
+- Success code: `200`
+- curl
 
 ```bash
 curl -X 'GET' \
-  'http://127.0.0.1:8000/items/1' \
-  -H 'accept: application/json'
+  'http://127.0.0.1:8000/items?skip=0&limit=20&search=laptop' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4'
 ```
 
----
+- request url
 
-### 3.4 Update Item
+```text
+http://127.0.0.1:8000/items?skip=0&limit=20&search=laptop
+```
 
-#### PUT `/items/{item_id}`
+### 4. Get Item by ID
 
-**Method**: `PUT`  
-**URL**: `http://127.0.0.1:8000/items/1`
-**Deskripsi**: Mengupdate item berdasarkan ID.
+- URL: `/items/{item_id}`
+- Method: `GET`
+- Auth Required?: ✅ Yes
+- Path Parameters:
 
-- **Auth required**: Ya
-- **Status sukses**: `200 OK`
-- **Status jika tidak ditemukan**: `404 Not Found`
 
-**Request Body (partial allowed)**
+| Parameter | Type    | Description                |
+| --------- | ------- | -------------------------- |
+| item_id   | Integer | ID item yang ingin dilihat |
+
+
+- Request Body: `none`
+- Response (200 OK):
 
 ```json
 {
-  "name": "Laptop Pro",
-  "price": 20000000
+  "name": "Laptop",
+  "description": "Laptop untuk cloud computing",
+  "price": 15000000,
+  "quantity": 15,
+  "id": 12,
+  "created_at": "2026-03-26T09:25:01.684260+08:00",
+  "updated_at": null
 }
 ```
-
-**Contoh curl**
-
-```bash
-curl -X 'PUT' \
-  'http://127.0.0.1:8000/items/1' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "name": "string",
-  "description": "string",
-  "price": 1,
-  "quantity": 0
-}'
-```
-
----
-
-### 3.5 Delete Item
-
-#### DELETE `/items/{item_id}`
-
-**Method**: `DELETE`  
-**URL**: `http://127.0.0.1:8000/items/1`
-**Deskripsi**: Menghapus item berdasarkan ID.
-
-- **Auth required**: Ya
-- **Status sukses**: `204 No Content`
-- **Status jika tidak ditemukan**: `404 Not Found`
-
-**Contoh curl**
-
-```bash
-curl -X 'DELETE' \
-  'http://127.0.0.1:8000/items/1' \
-  -H 'accept: */*'
-```
-
----
-
-## 4. Team
-
-### GET `/team`
-
-**Method**: `GET`  
-**URL**: `http://127.0.0.1:8000/team`
-**Deskripsi**: Menampilkan informasi tim pengembang (nama, NIM, role).
-
-- **Auth required**: Tidak
-- **Status sukses**: `200 OK`
-
-**Contoh curl**
+- Success code: `200`
+- Not found: `404`
+- curl
 
 ```bash
 curl -X 'GET' \
-  'http://127.0.0.1:8000/team' \
-  -H 'accept: application/json'
+  'http://127.0.0.1:8000/items/12' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/items/12
+```
+
+### 5. Update Item
+
+- URL: `/items/{item_id}`
+- Method: `PUT`
+- Auth Required?: ✅ Yes
+- Request Body (partial update diperbolehkan):
+
+```json
+{
+  "name": "laptop",
+  "description": "Laptop untuk saya",
+  "price": 180000000,
+  "quantity": 40
+}
+```
+
+- Response (200 OK):
+
+```json
+{
+  "name": "laptop",
+  "description": "Laptop untuk saya",
+  "price": 180000000,
+  "quantity": 40,
+  "id": 12,
+  "created_at": "2026-03-26T09:25:01.684260+08:00",
+  "updated_at": "2026-03-26T09:39:18.153015+08:00"
+}
+```
+- Success code: `200`
+- Not found: `404`   
+- curl
+
+```bash
+curl -X 'PUT' \
+  'http://127.0.0.1:8000/items/12' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "name": "laptop",
+  "description": "Laptop untuk saya",
+  "price": 180000000,
+  "quantity": 40
+}'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/items/1
+```
+
+### 6. Delete Item
+
+- URL: `/items/{item_id}`
+- Method: `DELETE`
+- Auth Required?: ✅ Yes
+- Request Body: `none`
+- Success code: `204`
+- Not found: `404`
+- curl
+
+```bash
+curl -X 'DELETE' \
+  'http://127.0.0.1:8000/items/12' \
+  -H 'accept: */*' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMiIsImV4cCI6MTc3NDQ5MTU3M30.7NAzFyq-EqIKbzc3ODldbEf1JDooJDkX_cz9TIqosa4'
+```
+
+- request url
+
+```text
+http://127.0.0.1:8000/items/1
 ```
 
