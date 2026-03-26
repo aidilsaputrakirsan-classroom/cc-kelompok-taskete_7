@@ -84,7 +84,7 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 | 1 | Setup & Hello World | ✅ |
 | 2 | REST API + Database | ✅ |
 | 3 | React Frontend | ✅ |
-| 4 | Full-Stack Integration | ⬜ |
+| 4 | Full-Stack Integration | ✅ |
 | 5-7 | Docker & Compose | ⬜ |
 | 8 | UTS Demo | ⬜ |
 | 9-11 | CI/CD Pipeline | ⬜ |
@@ -98,6 +98,7 @@ Buka http://localhost:5173 untuk melihat aplikasi.
 cc-kelompok-taskete_7/
 ├── backend/
 │   ├── .env.example         # Template konfigurasi database
+│   ├── auth.py              # Autentikasi & otorisasi user
 │   ├── crud.py              # Fungsi CRUD (business logic)
 │   ├── database.py          # Koneksi PostgreSQL via SQLAlchemy
 │   ├── main.py              # Entry point, FastAPI endpoints
@@ -119,6 +120,7 @@ cc-kelompok-taskete_7/
 │   │   ├── 6-search-items.png
 │   │   ├── 7-delete-items.png
 │   │   └── 8-verify-delete.png
+│   ├── api-documentation.md
 │   ├── api-test-results.md
 │   ├── database-schema.md
 │   ├── hapus semua items.png
@@ -152,8 +154,11 @@ cc-kelompok-taskete_7/
 │   │   │   ├── ItemCard.jsx
 │   │   │   ├── ItemForm.jsx
 │   │   │   ├── ItemList.jsx
+│   │   │   ├── LoginPage.jsx
 │   │   │   ├── SearchBar.jsx
-│   │   │   └── SortDropdown.jsx
+│   │   │   ├── SortDropdown.jsx
+│   │   │   ├── Spinner.jsx
+│   │   │   └── Toast.jsx
 │   │   ├── services/
 │   │   │   └── api.js
 │   │   ├── api.js
@@ -171,7 +176,6 @@ cc-kelompok-taskete_7/
 │   └── vite.config.js
 │ 
 ├── .gitignore
-├── package-lock.json
 └── README.md
 ```
 
