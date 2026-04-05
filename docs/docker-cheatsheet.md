@@ -76,3 +76,32 @@ docker rm backend-api
 # Shortcut: Stop & Hapus sekaligus (Force Remove)
 docker rm -f backend-api
 ```
+
+## 7. ☁️ TAG, PUSH & PULL (Docker Hub Registry)
+Digunakan untuk mengupload dan mendownload image dari Docker Hub.
+
+```bash
+# 1. Login ke Docker Hub (Masukkan username & password)
+docker login
+
+# 2. Beri Tag pada image lokal agar sesuai format Docker Hub
+# Format: docker tag <local-image> <dockerhub-username>/<repo-name>:<tag>
+docker tag cloudapp-backend:v1 username-kalian/cloudapp-backend:v1
+
+# 3. Push (Upload) ke Docker Hub
+docker push username-kalian/cloudapp-backend:v1
+
+# 4. Pull (Download) dari Docker Hub (Jika bekerja di laptop lain)
+docker pull username-kalian/cloudapp-backend:v1
+```
+
+## 🧹 CLEAN UP (Membersihkan Cache & Sampah)
+Jika hardisk penuh karena Docker, gunakan perintah ini dengan hati-hati.
+
+```bash
+# Menghapus image yang tidak memiliki tag (dangling)
+docker image prune
+
+# MENGHAPUS SEMUA container, network, dan image yang tidak dipakai (Nuclear Option)
+docker system prune -a
+```
