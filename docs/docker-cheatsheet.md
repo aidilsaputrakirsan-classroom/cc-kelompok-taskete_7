@@ -62,3 +62,17 @@ ls -la
 cat requirements.txt
 exit # untuk keluar
 ```
+
+## 6. 🛑 STOP & 🗑️ RM (Menghentikan & Menghapus Container)
+Digunakan untuk mematikan dan menghapus container lama sebelum menjalankan yang baru.
+
+```bash
+# Menghentikan container yang sedang berjalan
+docker stop backend-api
+
+# Menghapus container (harus di-stop dulu)
+docker rm backend-api
+
+# Shortcut: Stop & Hapus sekaligus (Force Remove)
+docker rm -f backend-api
+```
