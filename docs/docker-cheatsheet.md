@@ -49,3 +49,16 @@ docker logs backend-api
 # Melihat log secara real-time (terus mengupdate)
 docker logs -f backend-api
 ```
+
+## 5. 💻 EXEC (Masuk ke dalam Container)
+Digunakan untuk masuk ke terminal/shell di dalam container yang sedang berjalan.
+
+```bash
+# Masuk ke dalam container backend
+docker exec -it backend-api bash
+
+# (Di dalam container) Cek struktur file atau test koneksi
+ls -la
+cat requirements.txt
+exit # untuk keluar
+```
