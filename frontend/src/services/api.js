@@ -64,12 +64,12 @@ export async function login(email, password) {
 
   const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/x-www-form-urlencoded" 
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
     },
     body: params,
   })
-  
+
   const data = await handleResponse(response)
   setToken(data.access_token)
   return data
@@ -109,9 +109,9 @@ export async function fetchItemStats() {
 export async function createItem(itemData) {
   const response = await fetch(`${API_URL}/items`, {
     method: "POST",
-    headers: { 
-      ...authHeaders(), 
-      "Content-Type": "application/json" 
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(itemData),
   })
@@ -121,9 +121,9 @@ export async function createItem(itemData) {
 export async function updateItem(id, itemData) {
   const response = await fetch(`${API_URL}/items/${id}`, {
     method: "PUT",
-    headers: { 
-      ...authHeaders(), 
-      "Content-Type": "application/json" 
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(itemData),
   })
