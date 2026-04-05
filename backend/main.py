@@ -43,7 +43,7 @@ app.add_middleware(
 
 @app.get("/health", tags=["System"])
 def health_check():
-    return {"status": "healthy", "version": "0.4.2"}
+    return {"status": "healthy", "version": "0.5.0"}
 
 
 # ==================== AUTH ENDPOINTS (PUBLIC) ====================
