@@ -1,28 +1,25 @@
 # ============================================================
-# Stage: Production Image
+# Dockerfile — Backend Portal Cuti (FastAPI)
 # ============================================================
 
-# 1. Base image — Python 3.12 slim (debian minimal, ~50MB)
+# Base image Python 3.12 slim
 FROM python:3.12-slim
 
-# 2. Set working directory di dalam container
+# Install curl untuk healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# 3. Copy HANYA requirements.txt dulu (cache optimization)
-#    Layer ini hanya rebuild jika requirements.txt berubah
+# Install dependencies terlebih dahulu (layer caching)
 COPY requirements.txt .
-
-# 4. Install Python dependencies
-#    --no-cache-dir: jangan simpan pip cache (hemat space)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy seluruh kode aplikasi
-#    Layer ini rebuild setiap kali kode berubah
+# Copy seluruh kode aplikasi
 COPY . .
 
-# 6. Dokumentasikan port yang digunakan
+# Dokumentasikan port
 EXPOSE 8000
 
-# 7. Command untuk menjalankan aplikasi
-#    --host 0.0.0.0: agar bisa diakses dari luar container
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Jalankan aplikasi dengan uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -1,111 +1,92 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
-from models import Item, User
-from schemas import ItemCreate, ItemUpdate, UserCreate
-from auth import hash_password, verify_password
+from passlib.context import CryptContext
 
-# ==================== ITEM CRUD ====================
+from models import User, UserRole
+from schemas import UserCreate, UserUpdate
 
-def create_item(db: Session, item_data: ItemCreate) -> Item:
-    """Buat item baru di database."""
-    db_item = Item(**item_data.model_dump())
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
-    """Ambil daftar items dengan pagination & search."""
-    query = db.query(Item)
-    
-    if search:
-        query = query.filter(
-            or_(
-                Item.name.ilike(f"%{search}%"),
-                Item.description.ilike(f"%{search}%")
-            )
-        )
-    
-    total = query.count()
-    items = query.order_by(Item.created_at.desc()).offset(skip).limit(limit).all()
-    
-    return {"total": total, "items": items}
 
-def get_item(db: Session, item_id: int) -> Item | None:
-    """Ambil satu item berdasarkan ID."""
-    return db.query(Item).filter(Item.id == item_id).first()
+# ==================== PASSWORD ====================
 
-def update_item(db: Session, item_id: int, item_data: ItemUpdate) -> Item | None:
-    """Update item berdasarkan ID dengan metode patch (exclude_unset)."""
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    
-    if not db_item:
-        return None
-    
-    update_data = item_data.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_item, field, value)
-    
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
 
-def delete_item(db: Session, item_id: int) -> bool:
-    """Hapus item berdasarkan ID."""
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    
-    if not db_item:
-        return False
-    
-    db.delete(db_item)
-    db.commit()
-    return True
 
-# ==================== TUGAS 4: STATS CRUD ====================
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
 
-def get_item_stats(db: Session):
-    """
-    Mengambil statistik inventaris menggunakan agregasi SQLAlchemy.
-    """
-    # Menghitung total item unik
-    total_items = db.query(Item).count()
-    
-    # Menghitung total stok (jumlah seluruh quantity)
-    total_stock = db.query(func.sum(Item.quantity)).scalar() or 0
-    
-    # Menghitung rata-rata harga
-    avg_price = db.query(func.avg(Item.price)).scalar() or 0
-    
-    return {
-        "total_items": total_items,
-        "total_stock": int(total_stock),
-        "average_price": round(float(avg_price), 2)
-    }
 
 # ==================== USER CRUD ====================
 
-def create_user(db: Session, user_data: UserCreate) -> User:
-    """Buat user baru dengan password yang di-hash."""
-    # Cek apakah email sudah terdaftar
-    existing = db.query(User).filter(User.email == user_data.email).first()
-    if existing:
+def get_user_by_email(db: Session, email: str) -> User | None:
+    return db.query(User).filter(User.email == email).first()
+
+
+def get_user_by_id(db: Session, user_id: int) -> User | None:
+    return db.query(User).filter(User.id == user_id).first()
+
+
+def create_user(db: Session, user_data: UserCreate) -> User | None:
+    """Buat user baru. Return None jika email sudah terdaftar."""
+    if get_user_by_email(db, user_data.email):
         return None
 
-    db_user = User(
+    user = User(
         email=user_data.email,
         name=user_data.name,
         hashed_password=hash_password(user_data.password),
+        role=user_data.role,
+        department=user_data.department,
+        position=user_data.position,
+        phone=user_data.phone,
+        leave_quota=user_data.leave_quota,
+        work_start_date=user_data.work_start_date,
     )
-    db.add(db_user)
+    db.add(user)
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.refresh(user)
+    return user
+
 
 def authenticate_user(db: Session, email: str, password: str) -> User | None:
-    """Autentikasi user: verifikasi email & password."""
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
+    """Verifikasi email & password. Return user jika valid."""
+    user = get_user_by_email(db, email)
+    if not user or not verify_password(password, user.hashed_password):
         return None
-    if not verify_password(password, user.hashed_password):
+    if not user.is_active:
         return None
     return user
+
+
+def update_user(db: Session, user_id: int, user_data: UserUpdate) -> User | None:
+    """Update data user. Hanya field yang dikirim yang diupdate."""
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return None
+
+    update_fields = user_data.model_dump(exclude_unset=True)
+    for field, value in update_fields.items():
+        setattr(user, field, value)
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def get_all_users(
+    db: Session,
+    role: str | None = None,
+    skip: int = 0,
+    limit: int = 50,
+) -> dict:
+    """Ambil semua user dengan filter role opsional."""
+    query = db.query(User)
+    if role:
+        try:
+            query = query.filter(User.role == UserRole(role))
+        except ValueError:
+            pass
+    total = query.count()
+    users = query.offset(skip).limit(limit).all()
+    return {"total": total, "users": users}
