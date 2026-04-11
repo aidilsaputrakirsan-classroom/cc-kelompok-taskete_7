@@ -1,111 +1,397 @@
+"""
+SIMCUTI — Business Logic (CRUD + SAW Algorithm)
+Semua operasi database dan kalkulasi ada di sini.
+"""
+from datetime import date, datetime, timedelta
+from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
-from models import Item, User
-from schemas import ItemCreate, ItemUpdate, UserCreate
+from sqlalchemy import func, and_, or_
+
+from models import User, LeaveRequest, Holiday
+from schemas import (
+    UserCreate, LeaveCreate, LeaveApproveReject,
+    HolidayCreate, KaryawanSAWData, SAWResponse
+)
 from auth import hash_password, verify_password
 
-# ==================== ITEM CRUD ====================
 
-def create_item(db: Session, item_data: ItemCreate) -> Item:
-    """Buat item baru di database."""
-    db_item = Item(**item_data.model_dump())
-    db.add(db_item)
-    db.commit()
-    db.refresh(db_item)
-    return db_item
+# ==================== UTILS KALKULASI HARI KERJA ====================
 
-def get_items(db: Session, skip: int = 0, limit: int = 20, search: str = None):
-    """Ambil daftar items dengan pagination & search."""
-    query = db.query(Item)
-    
-    if search:
-        query = query.filter(
-            or_(
-                Item.name.ilike(f"%{search}%"),
-                Item.description.ilike(f"%{search}%")
-            )
-        )
-    
-    total = query.count()
-    items = query.order_by(Item.created_at.desc()).offset(skip).limit(limit).all()
-    
-    return {"total": total, "items": items}
+def get_holiday_dates(db: Session) -> set:
+    """Ambil semua tanggal hari libur dari database sebagai set."""
+    holidays = db.query(Holiday.date).all()
+    return {h.date for h in holidays}
 
-def get_item(db: Session, item_id: int) -> Item | None:
-    """Ambil satu item berdasarkan ID."""
-    return db.query(Item).filter(Item.id == item_id).first()
 
-def update_item(db: Session, item_id: int, item_data: ItemUpdate) -> Item | None:
-    """Update item berdasarkan ID dengan metode patch (exclude_unset)."""
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    
-    if not db_item:
-        return None
-    
-    update_data = item_data.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
-        setattr(db_item, field, value)
-    
-    db.commit()
-    db.refresh(db_item)
-    return db_item
-
-def delete_item(db: Session, item_id: int) -> bool:
-    """Hapus item berdasarkan ID."""
-    db_item = db.query(Item).filter(Item.id == item_id).first()
-    
-    if not db_item:
-        return False
-    
-    db.delete(db_item)
-    db.commit()
-    return True
-
-# ==================== TUGAS 4: STATS CRUD ====================
-
-def get_item_stats(db: Session):
+def count_working_days(start_date: date, end_date: date, db: Session) -> int:
     """
-    Mengambil statistik inventaris menggunakan agregasi SQLAlchemy.
+    Hitung hari kerja efektif antara start_date dan end_date (inclusive).
+    EXCLUDE: Sabtu, Minggu, dan hari libur nasional/cuti bersama dari DB.
+    
+    Catatan: Hari libur nasional TIDAK dihitung sebagai cuti karyawan
+    karena merupakan hari libur wajib untuk semua.
     """
-    # Menghitung total item unik
-    total_items = db.query(Item).count()
-    
-    # Menghitung total stok (jumlah seluruh quantity)
-    total_stock = db.query(func.sum(Item.quantity)).scalar() or 0
-    
-    # Menghitung rata-rata harga
-    avg_price = db.query(func.avg(Item.price)).scalar() or 0
-    
-    return {
-        "total_items": total_items,
-        "total_stock": int(total_stock),
-        "average_price": round(float(avg_price), 2)
-    }
+    if end_date < start_date:
+        return 0
+
+    holiday_dates = get_holiday_dates(db)
+    working_days = 0
+    current = start_date
+
+    while current <= end_date:
+        # Exclude Sabtu (weekday=5) dan Minggu (weekday=6)
+        if current.weekday() < 5:
+            # Exclude hari libur nasional & cuti bersama
+            if current not in holiday_dates:
+                working_days += 1
+        current += timedelta(days=1)
+
+    return working_days
+
+
+def get_used_leave_days(user_id: int, db: Session) -> int:
+    """Hitung total hari cuti yang sudah digunakan (approved) oleh user pada tahun berjalan."""
+    current_year = datetime.now().year
+    result = db.query(func.sum(LeaveRequest.working_days)).filter(
+        LeaveRequest.user_id == user_id,
+        LeaveRequest.status == "approved",
+        func.extract("year", LeaveRequest.start_date) == current_year,
+    ).scalar()
+    return result or 0
+
 
 # ==================== USER CRUD ====================
 
-def create_user(db: Session, user_data: UserCreate) -> User:
-    """Buat user baru dengan password yang di-hash."""
-    # Cek apakah email sudah terdaftar
+def create_user(db: Session, user_data: UserCreate) -> Optional[User]:
+    """Buat user baru. Return None jika email sudah terdaftar."""
     existing = db.query(User).filter(User.email == user_data.email).first()
     if existing:
         return None
 
-    db_user = User(
+    user = User(
         email=user_data.email,
         name=user_data.name,
         hashed_password=hash_password(user_data.password),
+        role=user_data.role or "karyawan",
+        department=user_data.department,
+        join_date=user_data.join_date or date.today(),
     )
-    db.add(db_user)
+    db.add(user)
     db.commit()
-    db.refresh(db_user)
-    return db_user
+    db.refresh(user)
+    return user
 
-def authenticate_user(db: Session, email: str, password: str) -> User | None:
-    """Autentikasi user: verifikasi email & password."""
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        return None
-    if not verify_password(password, user.hashed_password):
+
+def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
+    """Verifikasi email + password. Return user jika valid, None jika tidak."""
+    user = db.query(User).filter(User.email == email, User.is_active == True).first()
+    if not user or not verify_password(password, user.hashed_password):
         return None
     return user
+
+
+def get_all_karyawan(db: Session) -> List[User]:
+    """Ambil semua user yang berperan sebagai karyawan."""
+    return db.query(User).filter(User.role == "karyawan", User.is_active == True).all()
+
+
+# ==================== LEAVE REQUEST CRUD ====================
+
+def create_leave_request(
+    db: Session,
+    leave_data: LeaveCreate,
+    user: User,
+) -> Optional[LeaveRequest]:
+    """
+    Buat pengajuan cuti baru.
+    Validasi: sisa kuota mencukupi, tidak ada pengajuan pending yang overlapping.
+    """
+    # Hitung hari kerja efektif
+    working_days = count_working_days(leave_data.start_date, leave_data.end_date, db)
+    if working_days == 0:
+        return None  # Semua hari adalah libur/weekend
+
+    # Cek sisa kuota
+    used = get_used_leave_days(user.id, db)
+    remaining = user.annual_leave_quota - used
+    if working_days > remaining:
+        return None  # Kuota tidak cukup
+
+    # Cek apakah ada pengajuan pending yang overlapping
+    overlap = db.query(LeaveRequest).filter(
+        LeaveRequest.user_id == user.id,
+        LeaveRequest.status == "pending",
+        or_(
+            and_(LeaveRequest.start_date <= leave_data.start_date, LeaveRequest.end_date >= leave_data.start_date),
+            and_(LeaveRequest.start_date <= leave_data.end_date, LeaveRequest.end_date >= leave_data.end_date),
+            and_(LeaveRequest.start_date >= leave_data.start_date, LeaveRequest.end_date <= leave_data.end_date),
+        )
+    ).first()
+    if overlap:
+        return None  # Ada overlap dengan pengajuan pending
+
+    leave = LeaveRequest(
+        user_id=user.id,
+        start_date=leave_data.start_date,
+        end_date=leave_data.end_date,
+        working_days=working_days,
+        reason=leave_data.reason,
+        emergency_contact=leave_data.emergency_contact,
+        status="pending",
+    )
+    db.add(leave)
+    db.commit()
+    db.refresh(leave)
+    return leave
+
+
+def get_leave_requests_by_user(
+    db: Session,
+    user_id: int,
+    skip: int = 0,
+    limit: int = 50,
+    status_filter: Optional[str] = None,
+) -> dict:
+    """Ambil daftar pengajuan cuti milik user tertentu."""
+    query = db.query(LeaveRequest).filter(LeaveRequest.user_id == user_id)
+    if status_filter:
+        query = query.filter(LeaveRequest.status == status_filter)
+    total = query.count()
+    items = query.order_by(LeaveRequest.created_at.desc()).offset(skip).limit(limit).all()
+    return {"total": total, "items": items}
+
+
+def get_all_leave_requests(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    status_filter: Optional[str] = None,
+) -> dict:
+    """Ambil semua pengajuan cuti (untuk admin)."""
+    query = db.query(LeaveRequest)
+    if status_filter:
+        query = query.filter(LeaveRequest.status == status_filter)
+    total = query.count()
+    items = query.order_by(LeaveRequest.created_at.desc()).offset(skip).limit(limit).all()
+    return {"total": total, "items": items}
+
+
+def get_leave_by_id(db: Session, leave_id: int) -> Optional[LeaveRequest]:
+    """Ambil satu pengajuan cuti berdasarkan ID."""
+    return db.query(LeaveRequest).filter(LeaveRequest.id == leave_id).first()
+
+
+def approve_leave(
+    db: Session,
+    leave_id: int,
+    admin: User,
+) -> Optional[LeaveRequest]:
+    """Admin: Approve pengajuan cuti."""
+    leave = get_leave_by_id(db, leave_id)
+    if not leave or leave.status != "pending":
+        return None
+    leave.status = "approved"
+    leave.admin_id = admin.id
+    db.commit()
+    db.refresh(leave)
+    return leave
+
+
+def reject_leave(
+    db: Session,
+    leave_id: int,
+    admin: User,
+    data: LeaveApproveReject,
+) -> Optional[LeaveRequest]:
+    """Admin: Reject pengajuan cuti dengan catatan penolakan."""
+    leave = get_leave_by_id(db, leave_id)
+    if not leave or leave.status != "pending":
+        return None
+    leave.status = "rejected"
+    leave.admin_id = admin.id
+    leave.rejection_note = data.rejection_note
+    db.commit()
+    db.refresh(leave)
+    return leave
+
+
+# ==================== HOLIDAY CRUD ====================
+
+def get_holidays(db: Session) -> List[Holiday]:
+    """Ambil semua hari libur, diurutkan berdasarkan tanggal."""
+    return db.query(Holiday).order_by(Holiday.date.asc()).all()
+
+
+def create_holiday(db: Session, data: HolidayCreate) -> Optional[Holiday]:
+    """Tambah hari libur baru. Return None jika tanggal sudah ada."""
+    existing = db.query(Holiday).filter(Holiday.date == data.date).first()
+    if existing:
+        return None
+    holiday = Holiday(date=data.date, name=data.name, type=data.type or "nasional")
+    db.add(holiday)
+    db.commit()
+    db.refresh(holiday)
+    return holiday
+
+
+def delete_holiday(db: Session, holiday_id: int) -> bool:
+    """Hapus hari libur berdasarkan ID."""
+    holiday = db.query(Holiday).filter(Holiday.id == holiday_id).first()
+    if not holiday:
+        return False
+    db.delete(holiday)
+    db.commit()
+    return True
+
+
+# ==================== ANALYTICS & SAW ====================
+
+def get_summary_stats(db: Session) -> dict:
+    """Hitung statistik ringkasan cuti."""
+    total_karyawan = db.query(User).filter(User.role == "karyawan", User.is_active == True).count()
+    total_pengajuan = db.query(LeaveRequest).count()
+    pending_count = db.query(LeaveRequest).filter(LeaveRequest.status == "pending").count()
+    approved_count = db.query(LeaveRequest).filter(LeaveRequest.status == "approved").count()
+    rejected_count = db.query(LeaveRequest).filter(LeaveRequest.status == "rejected").count()
+    total_hari = db.query(func.sum(LeaveRequest.working_days)).filter(
+        LeaveRequest.status == "approved"
+    ).scalar() or 0
+
+    return {
+        "total_karyawan": total_karyawan,
+        "total_pengajuan": total_pengajuan,
+        "pending_count": pending_count,
+        "approved_count": approved_count,
+        "rejected_count": rejected_count,
+        "total_hari_cuti_approved": total_hari,
+    }
+
+
+def calculate_saw(db: Session) -> SAWResponse:
+    """
+    Algoritma SAW (Simple Additive Weighting) untuk ranking karyawan.
+    
+    Kriteria & Bobot:
+    - C1: Sisa Kuota Cuti (Benefit)   — 0.30
+    - C2: Total Pengajuan (Cost)       — 0.20
+    - C3: Jumlah Pending (Cost)        — 0.20
+    - C4: % Approved (Benefit)         — 0.15
+    - C5: Masa Kerja/hari (Benefit)    — 0.15
+    
+    Catatan: Semakin TINGGI skor SAW = karyawan lebih "disiplin" cuti
+    (sisa kuota banyak, jarang pending berlebihan, approval rate tinggi, masa kerja lama)
+    """
+    BOBOT = {
+        "sisa_kuota": 0.30,
+        "total_pengajuan": 0.20,
+        "pending": 0.20,
+        "approval_rate": 0.15,
+        "masa_kerja": 0.15,
+    }
+
+    karyawans = get_all_karyawan(db)
+    if not karyawans:
+        return SAWResponse(bobot=BOBOT, data=[])
+
+    today = date.today()
+    raw_data = []
+
+    for k in karyawans:
+        # Hitung statistik pengajuan
+        total_requests = db.query(LeaveRequest).filter(LeaveRequest.user_id == k.id).count()
+        pending = db.query(LeaveRequest).filter(
+            LeaveRequest.user_id == k.id, LeaveRequest.status == "pending"
+        ).count()
+        approved = db.query(LeaveRequest).filter(
+            LeaveRequest.user_id == k.id, LeaveRequest.status == "approved"
+        ).count()
+        rejected = db.query(LeaveRequest).filter(
+            LeaveRequest.user_id == k.id, LeaveRequest.status == "rejected"
+        ).count()
+
+        # Approval rate (dari non-pending, hindari division by zero)
+        non_pending = total_requests - pending
+        approval_rate = (approved / non_pending * 100) if non_pending > 0 else 100.0
+
+        # Total hari cuti yang sudah digunakan
+        used_days = get_used_leave_days(k.id, db)
+        remaining_quota = k.annual_leave_quota - used_days
+
+        # Masa kerja dalam hari
+        jd = k.join_date if k.join_date else today
+        masa_kerja = max((today - jd).days, 1)
+
+        raw_data.append({
+            "user": k,
+            "total_requests": total_requests,
+            "pending": pending,
+            "approved": approved,
+            "rejected": rejected,
+            "approval_rate": approval_rate,
+            "remaining_quota": remaining_quota,
+            "used_days": used_days,
+            "masa_kerja": masa_kerja,
+        })
+
+    if not raw_data:
+        return SAWResponse(bobot=BOBOT, data=[])
+
+    # ===== LANGKAH 1: Normalisasi Matriks =====
+    # Benefit: nilai / max(nilai)
+    # Cost: min(nilai) / nilai
+
+    max_sisa_kuota = max(r["remaining_quota"] for r in raw_data) or 1
+    min_total_req = min(r["total_requests"] for r in raw_data) or 1
+    min_pending = min(r["pending"] for r in raw_data)
+    max_approval_rate = max(r["approval_rate"] for r in raw_data) or 1
+    max_masa_kerja = max(r["masa_kerja"] for r in raw_data) or 1
+
+    # ===== LANGKAH 2: Hitung Skor SAW =====
+    result_data = []
+    for i, r in enumerate(raw_data):
+        k = r["user"]
+
+        # Normalisasi setiap kriteria
+        n_sisa_kuota = r["remaining_quota"] / max_sisa_kuota  # benefit
+
+        # Cost: cegah division by zero
+        n_total_req = min_total_req / r["total_requests"] if r["total_requests"] > 0 else 1.0
+        n_pending = min_pending / r["pending"] if r["pending"] > 0 else 1.0
+
+        n_approval_rate = r["approval_rate"] / max_approval_rate  # benefit
+        n_masa_kerja = r["masa_kerja"] / max_masa_kerja  # benefit
+
+        # Skor SAW = Σ(bobot * nilai_normalisasi)
+        saw_score = (
+            BOBOT["sisa_kuota"] * n_sisa_kuota +
+            BOBOT["total_pengajuan"] * n_total_req +
+            BOBOT["pending"] * n_pending +
+            BOBOT["approval_rate"] * n_approval_rate +
+            BOBOT["masa_kerja"] * n_masa_kerja
+        )
+
+        result_data.append(KaryawanSAWData(
+            user_id=k.id,
+            name=k.name,
+            email=k.email,
+            department=k.department,
+            join_date=k.join_date,
+            annual_leave_quota=k.annual_leave_quota,
+            total_leave_taken=r["used_days"],
+            total_requests=r["total_requests"],
+            pending_requests=r["pending"],
+            approved_requests=r["approved"],
+            rejected_requests=r["rejected"],
+            approval_rate=round(r["approval_rate"], 2),
+            remaining_quota=r["remaining_quota"],
+            working_days=r["masa_kerja"],
+            saw_score=round(saw_score, 4),
+            rank=0,  # Akan diisi setelah sort
+        ))
+
+    # ===== LANGKAH 3: Rank berdasarkan skor (tertinggi = rank 1) =====
+    result_data.sort(key=lambda x: x.saw_score, reverse=True)
+    for i, item in enumerate(result_data):
+        item.rank = i + 1
+
+    return SAWResponse(bobot=BOBOT, data=result_data)
