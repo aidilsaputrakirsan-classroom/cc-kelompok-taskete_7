@@ -1,28 +1,38 @@
 # ============================================================
-# Stage: Production Image
+# SIMCUTI Backend — Dockerfile
+# Python 3.12-slim, layer-optimized build
 # ============================================================
 
-# 1. Base image — Python 3.12 slim (debian minimal, ~50MB)
 FROM python:3.12-slim
 
-# 2. Set working directory di dalam container
+# Metadata
+LABEL maintainer="cc-kelompok-taskete_7"
+LABEL description="SIMCUTI Backend — FastAPI + PostgreSQL"
+
+# Set working directory
 WORKDIR /app
 
-# 3. Copy HANYA requirements.txt dulu (cache optimization)
-#    Layer ini hanya rebuild jika requirements.txt berubah
+# Install system dependencies (psycopg2 butuh libpq-dev)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements dulu (layer cache optimization)
 COPY requirements.txt .
 
-# 4. Install Python dependencies
-#    --no-cache-dir: jangan simpan pip cache (hemat space)
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy seluruh kode aplikasi
-#    Layer ini rebuild setiap kali kode berubah
+# Copy seluruh kode aplikasi
 COPY . .
 
-# 6. Dokumentasikan port yang digunakan
+# Expose port
 EXPOSE 8000
 
-# 7. Command untuk menjalankan aplikasi
-#    --host 0.0.0.0: agar bisa diakses dari luar container
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Jalankan backend
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

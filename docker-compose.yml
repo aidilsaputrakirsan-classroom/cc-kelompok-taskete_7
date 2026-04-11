@@ -1,0 +1,115 @@
+# ============================================================
+# SIMCUTI — Docker Compose
+# Sistem Informasi Manajemen Cuti Karyawan
+# cc-kelompok-taskete_7 | Institut Teknologi Kalimantan
+#
+# USAGE:
+#   docker compose up -d             # Start semua services (background)
+#   docker compose up --build -d     # Rebuild + start
+#   docker compose down               # Stop & remove containers
+#   docker compose down -v            # Stop & hapus volumes (⚠️ data hilang!)
+#   docker compose logs -f            # Lihat logs real-time
+#   docker compose ps                 # Status semua services
+# ============================================================
+
+services:
+
+  # =====================================================
+  # DATABASE — PostgreSQL 16
+  # Data persist via named volume pgdata
+  # =====================================================
+  db:
+    image: postgres:16-alpine
+    container_name: simcuti-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: simcuti
+    ports:
+      - "5433:5432"   # Port 5433 di host (hindari konflik dgn PostgreSQL lokal di 5432)
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - simcuti-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d simcuti"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # =====================================================
+  # BACKEND — FastAPI + Uvicorn
+  # Tunggu DB healthy sebelum start
+  # Auto-seed data awal setelah app ready
+  # =====================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simcuti-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "8000:8000"
+    networks:
+      - simcuti-net
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    # Jalankan seed.py setelah app siap (untuk data awal)
+    command: >
+      sh -c "
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        sleep 5 &&
+        python seed.py &&
+        wait
+      "
+
+  # =====================================================
+  # FRONTEND — React + Nginx (Multi-Stage Build)
+  # Serve static files via Nginx pada port 3000
+  # =====================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # URL backend yang diakses dari BROWSER USER
+        # Harus menggunakan localhost (host machine), bukan nama service Docker
+        VITE_API_URL: http://localhost:8000
+    container_name: simcuti-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    networks:
+      - simcuti-net
+    depends_on:
+      - backend
+
+# =====================================================
+# VOLUMES — Named volume untuk data persistence
+# =====================================================
+volumes:
+  pgdata:
+    name: simcuti-pgdata
+    # Data database akan tetap ada meskipun container dihapus
+    # Untuk reset penuh: docker compose down -v
+
+# =====================================================
+# NETWORKS — Custom bridge network untuk komunikasi
+# =====================================================
+networks:
+  simcuti-net:
+    name: simcuti-network
+    driver: bridge
+    # Backend bisa akses DB via: postgresql://postgres:postgres123@db:5432/simcuti
+    # (menggunakan nama service 'db' sebagai hostname di dalam network)

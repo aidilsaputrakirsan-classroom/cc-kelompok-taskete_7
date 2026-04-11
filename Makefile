@@ -1,0 +1,113 @@
+# ============================================================
+# SIMCUTI — Makefile
+# Shortcut commands untuk Docker Compose
+# cc-kelompok-taskete_7 | Institut Teknologi Kalimantan
+#
+# Usage: make <target>
+# ============================================================
+
+.PHONY: up build down clean restart logs logs-backend logs-frontend logs-db ps \
+        shell-backend shell-db seed help
+
+# ===== COLORS =====
+GREEN  = \033[0;32m
+YELLOW = \033[0;33m
+CYAN   = \033[0;36m
+RESET  = \033[0m
+
+# ===== TARGETS =====
+
+## Tampilkan perintah yang tersedia
+help:
+	@echo ""
+	@echo "$(CYAN)🏢 SIMCUTI — Docker Compose Commands$(RESET)"
+	@echo "$(CYAN)=====================================...$(RESET)"
+	@echo ""
+	@echo "$(GREEN)  make up$(RESET)              Start semua services (background)"
+	@echo "$(GREEN)  make build$(RESET)           Rebuild images + start"
+	@echo "$(GREEN)  make down$(RESET)            Stop & hapus containers"
+	@echo "$(YELLOW)  make clean$(RESET)           Stop + hapus containers & volumes (⚠️ DATA HILANG!)"
+	@echo "$(GREEN)  make restart$(RESET)         Restart semua services"
+	@echo "$(GREEN)  make ps$(RESET)              Status semua services"
+	@echo "$(GREEN)  make logs$(RESET)            Lihat logs semua services (follow)"
+	@echo "$(GREEN)  make logs-backend$(RESET)    Lihat logs backend saja"
+	@echo "$(GREEN)  make logs-frontend$(RESET)   Lihat logs frontend saja"
+	@echo "$(GREEN)  make logs-db$(RESET)         Lihat logs database saja"
+	@echo "$(GREEN)  make shell-backend$(RESET)   Masuk ke shell container backend"
+	@echo "$(GREEN)  make shell-db$(RESET)        Masuk ke psql database"
+	@echo "$(GREEN)  make seed$(RESET)            Jalankan database seeder"
+	@echo ""
+
+## Start semua services (background)
+up:
+	@echo "$(GREEN)🚀 Starting SIMCUTI services...$(RESET)"
+	docker compose up -d
+	@echo ""
+	@echo "$(GREEN)✅ Services started!$(RESET)"
+	@echo "$(CYAN)   🌐 Frontend : http://localhost:3000$(RESET)"
+	@echo "$(CYAN)   🔧 Backend  : http://localhost:8000$(RESET)"
+	@echo "$(CYAN)   📚 Swagger  : http://localhost:8000/docs$(RESET)"
+	@echo "$(CYAN)   🗄️  Database : localhost:5433$(RESET)"
+
+## Rebuild images + start
+build:
+	@echo "$(YELLOW)🔨 Building & starting SIMCUTI...$(RESET)"
+	docker compose up --build -d
+	@echo ""
+	@echo "$(GREEN)✅ Build complete! Services started.$(RESET)"
+	@echo "$(CYAN)   🌐 Frontend : http://localhost:3000$(RESET)"
+	@echo "$(CYAN)   🔧 Backend  : http://localhost:8000/docs$(RESET)"
+
+## Stop & hapus containers (volume tetap ada)
+down:
+	@echo "$(YELLOW)🛑 Stopping SIMCUTI services...$(RESET)"
+	docker compose down
+	@echo "$(GREEN)✅ Services stopped. Data tetap aman di volume!$(RESET)"
+
+## Stop + hapus containers DAN volumes (⚠️ data hilang!)
+clean:
+	@echo "$(YELLOW)⚠️  WARNING: Ini akan menghapus SEMUA data database!$(RESET)"
+	@read -p "Lanjutkan? [y/N] " confirm && [ "$$confirm" = "y" ] || exit 1
+	docker compose down -v
+	docker system prune -f
+	@echo "$(GREEN)✅ Semua container, volume, dan cache dihapus.$(RESET)"
+
+## Restart semua services
+restart:
+	@echo "$(YELLOW)🔄 Restarting all services...$(RESET)"
+	docker compose restart
+	@echo "$(GREEN)✅ Services restarted!$(RESET)"
+
+## Status semua services
+ps:
+	@echo "$(CYAN)📊 SIMCUTI Services Status:$(RESET)"
+	docker compose ps
+
+## Lihat logs semua services (follow)
+logs:
+	docker compose logs -f
+
+## Lihat logs backend saja
+logs-backend:
+	docker compose logs -f backend
+
+## Lihat logs frontend saja  
+logs-frontend:
+	docker compose logs -f frontend
+
+## Lihat logs database saja
+logs-db:
+	docker compose logs -f db
+
+## Masuk ke shell container backend
+shell-backend:
+	docker compose exec backend bash
+
+## Masuk ke psql database
+shell-db:
+	docker compose exec db psql -U postgres -d simcuti
+
+## Jalankan seeder manual
+seed:
+	@echo "$(GREEN)🌱 Running database seeder...$(RESET)"
+	docker compose exec backend python seed.py
