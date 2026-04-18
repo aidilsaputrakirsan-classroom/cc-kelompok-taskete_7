@@ -1,7 +1,5 @@
 /**
- * SIMCUTI — Dashboard Admin (HR)
- * Antarmuka tema HIJAU untuk admin/HR.
- * Navigasi: Ringkasan | Ajuan Pending | Riwayat | Hari Libur | Rekomendasi SAW
+ * SIMCUTI — Admin Dashboard (White & Blue Minimalist)
  */
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -28,141 +26,110 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (activeMenu === 'ringkasan') {
-      analyticsAPI.summary().then(setSummary).catch(() => { });
+      analyticsAPI.summary()
+        .then(setSummary)
+        .catch(err => show(err.message, 'error'));
     }
-  }, [activeMenu, refreshKey]);
+  }, [activeMenu, refreshKey, show]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--gray-900)' }}>
-      {/* ===== SIDEBAR ===== */}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fafafa' }}>
+      {/* Sidebar */}
       <aside style={{
-        width: 260, flexShrink: 0,
-        background: 'linear-gradient(180deg, #064e3b 0%, #0f172a 100%)',
-        borderRight: '1px solid rgba(5,150,105,0.25)',
+        width: 280, flexShrink: 0,
+        backgroundColor: '#ffffff',
+        borderRight: '1px solid var(--border-color)',
         display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        position: 'sticky', top: 0, height: '100vh',
       }}>
-        {/* Logo */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(5,150,105,0.2)' }}>
+        {/* Brand */}
+        <div style={{ padding: '2.5rem 1.5rem', borderBottom: '1px solid #f8fafc' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
-              width: 40, height: 40, borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--admin-primary), var(--admin-dark))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.25rem', boxShadow: 'var(--shadow-glow-green)',
-            }}>🏢</div>
-            <div>
-              <p style={{ fontWeight: 800, color: 'white', fontSize: '1rem', lineHeight: 1 }}>SIMCUTI</p>
-              <p style={{ fontSize: '0.7rem', color: 'var(--admin-400)', marginTop: '0.125rem' }}>Portal Admin / HR</p>
-            </div>
+              width: 32, height: 32, borderRadius: 6,
+              backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontSize: '1rem', fontWeight: 800
+            }}>S</div>
+            <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
+              SIMCUTI
+            </span>
           </div>
         </div>
 
         {/* User Info */}
-        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(5,150,105,0.1)' }}>
+        <div style={{ padding: '1.5rem' }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            background: 'rgba(5,150,105,0.12)', borderRadius: 'var(--radius-md)', padding: '0.875rem',
+            padding: '1.25rem', borderRadius: 'var(--radius-lg)', background: '#f8fafc',
+            border: '1px solid var(--border-color)'
           }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--admin-500), var(--admin-dark))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, color: 'white', fontSize: '1rem', flexShrink: 0,
-            }}>
-              {user?.name?.[0]?.toUpperCase() || 'A'}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontWeight: 600, color: 'white', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
-                <span style={{
-                  fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem',
-                  background: 'var(--admin-primary)', color: 'white', borderRadius: '3px',
-                }}>ADMIN</span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>{user?.department || 'HR'}</span>
-              </div>
+            <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.name}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>
+              <span style={{ fontSize: '0.65rem', fontWeight: 800, padding: '0.15rem 0.4rem', backgroundColor: 'var(--primary)', color: 'white', borderRadius: 4 }}>ADMIN</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{user?.department || 'HR'}</span>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '1rem 0.75rem' }}>
+        <nav style={{ flex: 1, padding: '0 1rem' }}>
           {MENUS.map((m) => (
             <button
               key={m.id}
-              id={`admin-nav-${m.id}`}
               onClick={() => setActiveMenu(m.id)}
               style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
-                padding: '0.75rem 0.875rem', borderRadius: 'var(--radius-md)',
+                width: '100%', display: 'flex', alignItems: 'center', gap: '0.875rem',
+                padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)',
                 border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.25rem',
-                transition: 'all 0.2s ease',
-                background: activeMenu === m.id
-                  ? 'linear-gradient(135deg, rgba(5,150,105,0.3), rgba(4,120,87,0.2))'
-                  : 'transparent',
-                color: activeMenu === m.id ? 'var(--admin-200)' : 'var(--gray-400)',
-                borderLeft: activeMenu === m.id ? '3px solid var(--admin-primary)' : '3px solid transparent',
+                fontSize: '0.875rem', fontWeight: activeMenu === m.id ? 700 : 500,
+                marginBottom: '0.25rem', transition: 'var(--transition-base)',
+                background: activeMenu === m.id ? 'var(--primary-light)' : 'transparent',
+                color: activeMenu === m.id ? 'var(--primary)' : 'var(--text-secondary)',
               }}
             >
-              <span style={{ fontSize: '1.2rem' }}>{m.icon}</span>
+              <span style={{ fontSize: '1.1rem', opacity: activeMenu === m.id ? 1 : 0.6 }}>{m.icon}</span>
               {m.label}
             </button>
           ))}
         </nav>
 
         {/* Logout */}
-        <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid rgba(5,150,105,0.1)' }}>
-          <button
-            onClick={logout}
-            id="admin-btn-logout"
-            className="btn btn-outline"
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            🚪 Keluar
+        <div style={{ padding: '1.5rem', borderTop: '1px solid #f8fafc' }}>
+          <button onClick={logout} className="btn btn-outline" style={{ width: '100%', border: '1px solid #fee2e2', color: '#b91c1c' }}>
+            Logout
           </button>
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT ===== */}
-      <main style={{ flex: 1, overflow: 'auto', padding: '2rem' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h1 style={{
-              fontSize: '1.5rem', fontWeight: 800, color: 'white',
-              background: 'linear-gradient(135deg, white, var(--admin-300))',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
-              {MENUS.find(m => m.id === activeMenu)?.icon}{' '}
-              {MENUS.find(m => m.id === activeMenu)?.label}
-            </h1>
-            <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-              {activeMenu === 'ringkasan' && 'Statistik keseluruhan pengajuan cuti perusahaan.'}
-              {activeMenu === 'ajuan' && 'Pengajuan cuti yang menunggu persetujuan Anda.'}
-              {activeMenu === 'riwayat' && 'Seluruh riwayat pengajuan dari semua karyawan.'}
-              {activeMenu === 'holiday' && 'Kelola kalender hari libur nasional dan cuti bersama.'}
-              {activeMenu === 'saw' && 'Ranking karyawan berdasarkan Metode SAW (5 kriteria).'}
-            </p>
-          </div>
-          {activeMenu === 'ajuan' && (
-            <button onClick={refresh} className="btn btn-outline btn-sm" id="btn-refresh-ajuan">
-              🔄 Refresh
-            </button>
-          )}
-        </div>
+      {/* Main Content Area */}
+      <main style={{ flex: 1, backgroundColor: '#fafafa', overflowY: 'auto' }}>
+        <div style={{ padding: '3rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
+          <header style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div>
+              <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
+                {MENUS.find(m => m.id === activeMenu)?.label}
+              </h2>
+              <div style={{ width: 40, height: 4, background: 'var(--primary)', marginTop: '0.5rem', borderRadius: 2 }}></div>
+            </div>
+            {activeMenu === 'ajuan' && (
+              <button onClick={refresh} className="btn btn-outline btn-sm">
+                Refresh Data
+              </button>
+            )}
+          </header>
 
-        {/* Content */}
-        <div style={{
-          background: 'var(--gray-800)', border: '1px solid var(--gray-700)',
-          borderRadius: 'var(--radius-xl)', padding: '1.75rem',
-          animation: 'fadeIn 0.4s ease', minHeight: '300px',
-        }}>
-          {activeMenu === 'ringkasan' && <SummaryCards data={summary} />}
-          {activeMenu === 'ajuan' && <DaftarAjuan showToast={show} onRefresh={refreshKey} />}
-          {activeMenu === 'riwayat' && <RiwayatAdmin />}
-          {activeMenu === 'holiday' && <KelolaHoliday showToast={show} />}
-          {activeMenu === 'saw' && <RekomendasiSAW />}
+          <section className="fade-in" style={{ 
+            backgroundColor: '#ffffff', 
+            borderRadius: 'var(--radius-lg)', 
+            border: '1px solid var(--border-color)', 
+            padding: '2.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+          }}>
+            {activeMenu === 'ringkasan' && <SummaryCards data={summary} />}
+            {activeMenu === 'ajuan' && <DaftarAjuan showToast={show} onRefresh={refreshKey} />}
+            {activeMenu === 'riwayat' && <RiwayatAdmin />}
+            {activeMenu === 'holiday' && <KelolaHoliday showToast={show} />}
+            {activeMenu === 'saw' && <RekomendasiSAW />}
+          </section>
         </div>
       </main>
 

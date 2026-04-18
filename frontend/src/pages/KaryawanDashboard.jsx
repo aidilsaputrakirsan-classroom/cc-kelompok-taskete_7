@@ -1,7 +1,5 @@
 /**
- * SIMCUTI — Dashboard Karyawan
- * Antarmuka tema UNGU untuk karyawan biasa.
- * Navigasi: Status Cuti | Kalender Libur | Ajukan Cuti | Histori
+ * SIMCUTI — Karyawan Dashboard (White & Blue Minimalist)
  */
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -20,134 +18,98 @@ export default function KaryawanDashboard() {
   const { toast, show, close } = useToast();
   const [activeMenu, setActiveMenu] = useState('status');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const refresh = () => setRefreshKey(k => k + 1);
 
-  const PURPLE = 'var(--karyawan-primary)';
-  const PURPLE_DARK = 'var(--karyawan-dark)';
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--gray-900)' }}>
-      {/* ===== SIDEBAR ===== */}
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fafafa' }}>
+      {/* Sidebar */}
       <aside style={{
-        width: 260, flexShrink: 0,
-        background: 'linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%)',
-        borderRight: '1px solid rgba(124,58,237,0.2)',
+        width: 280, flexShrink: 0,
+        backgroundColor: '#ffffff',
+        borderRight: '1px solid var(--border-color)',
         display: 'flex', flexDirection: 'column',
-        position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        position: 'sticky', top: 0, height: '100vh',
       }}>
-        {/* Logo */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(124,58,237,0.15)' }}>
+        {/* Brand */}
+        <div style={{ padding: '2.5rem 1.5rem', borderBottom: '1px solid #f8fafc' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
-              width: 40, height: 40, borderRadius: '12px',
-              background: 'linear-gradient(135deg, var(--karyawan-primary), var(--karyawan-dark))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.25rem', boxShadow: 'var(--shadow-glow-purple)',
-            }}>🏢</div>
-            <div>
-              <p style={{ fontWeight: 800, color: 'white', fontSize: '1rem', lineHeight: 1 }}>SIMCUTI</p>
-              <p style={{ fontSize: '0.7rem', color: 'var(--karyawan-400)', marginTop: '0.125rem' }}>Portal Karyawan</p>
-            </div>
+              width: 32, height: 32, borderRadius: 6,
+              backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontSize: '1rem', fontWeight: 800
+            }}>S</div>
+            <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
+              SIMCUTI
+            </span>
           </div>
         </div>
 
-        {/* User Info */}
-        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(124,58,237,0.1)' }}>
+        {/* User Profile */}
+        <div style={{ padding: '1.5rem' }}>
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '0.75rem',
-            background: 'rgba(124,58,237,0.1)', borderRadius: 'var(--radius-md)', padding: '0.875rem',
+            padding: '1.25rem', borderRadius: 'var(--radius-lg)', background: '#f8fafc',
+            border: '1px solid var(--border-color)'
           }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--karyawan-500), var(--karyawan-dark))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, color: 'white', fontSize: '1rem', flexShrink: 0,
-            }}>
-              {user?.name?.[0]?.toUpperCase() || 'K'}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ fontWeight: 600, color: 'white', fontSize: '0.9rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name}</p>
-              <p style={{ fontSize: '0.72rem', color: 'var(--gray-500)', marginTop: '0.1rem' }}>{user?.department || 'Karyawan'}</p>
-            </div>
+            <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{user?.name}</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem', fontWeight: 500 }}>{user?.department || 'Staff'}</p>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav style={{ flex: 1, padding: '1rem 0.75rem' }}>
+        <nav style={{ flex: 1, padding: '0 1rem' }}>
           {MENUS.map((m) => (
             <button
               key={m.id}
-              id={`nav-${m.id}`}
               onClick={() => setActiveMenu(m.id)}
               style={{
-                width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem',
-                padding: '0.75rem 0.875rem', borderRadius: 'var(--radius-md)',
+                width: '100%', display: 'flex', alignItems: 'center', gap: '0.875rem',
+                padding: '0.875rem 1rem', borderRadius: 'var(--radius-md)',
                 border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                fontSize: '0.9rem', fontWeight: 500, marginBottom: '0.25rem',
-                transition: 'all 0.2s ease',
-                background: activeMenu === m.id
-                  ? 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(91,33,182,0.2))'
-                  : 'transparent',
-                color: activeMenu === m.id ? 'var(--karyawan-200)' : 'var(--gray-400)',
-                borderLeft: activeMenu === m.id ? '3px solid var(--karyawan-primary)' : '3px solid transparent',
+                fontSize: '0.875rem', fontWeight: activeMenu === m.id ? 700 : 500,
+                marginBottom: '0.25rem', transition: 'var(--transition-base)',
+                background: activeMenu === m.id ? 'var(--primary-light)' : 'transparent',
+                color: activeMenu === m.id ? 'var(--primary)' : 'var(--text-secondary)',
               }}
             >
-              <span style={{ fontSize: '1.2rem' }}>{m.icon}</span>
+              <span style={{ fontSize: '1.1rem', opacity: activeMenu === m.id ? 1 : 0.6 }}>{m.icon}</span>
               {m.label}
             </button>
           ))}
         </nav>
 
         {/* Logout */}
-        <div style={{ padding: '1rem 0.75rem', borderTop: '1px solid rgba(124,58,237,0.1)' }}>
-          <button
-            onClick={logout}
-            id="btn-logout"
-            className="btn btn-outline"
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            🚪 Keluar
+        <div style={{ padding: '1.5rem', borderTop: '1px solid #f8fafc' }}>
+          <button onClick={logout} className="btn btn-outline" style={{ width: '100%', border: '1px solid #fee2e2', color: '#b91c1c' }}>
+            Logout
           </button>
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT ===== */}
-      <main style={{ flex: 1, overflow: 'auto', padding: '2rem' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: '1.5rem', fontWeight: 800, color: 'white',
-            background: `linear-gradient(135deg, white, var(--karyawan-300))`,
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          }}>
-            {MENUS.find(m => m.id === activeMenu)?.icon}{' '}
-            {MENUS.find(m => m.id === activeMenu)?.label}
-          </h1>
-          <p style={{ color: 'var(--gray-500)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            {activeMenu === 'status' && 'Ringkasan kuota cuti Anda tahun ini.'}
-            {activeMenu === 'kalender' && 'Hari libur nasional dan cuti bersama yang berlaku.'}
-            {activeMenu === 'ajukan' && 'Isi form di bawah untuk mengajukan cuti baru.'}
-            {activeMenu === 'histori' && 'Semua riwayat pengajuan cuti Anda.'}
-          </p>
-        </div>
+      {/* Main Content Area */}
+      <main style={{ flex: 1, backgroundColor: '#fafafa', overflowY: 'auto' }}>
+        <div style={{ padding: '3rem 4rem', maxWidth: '1400px', margin: '0 auto' }}>
+          <header style={{ marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
+              {MENUS.find(m => m.id === activeMenu)?.label}
+            </h2>
+            <div style={{ width: 40, height: 4, background: 'var(--primary)', marginTop: '0.5rem', borderRadius: 2 }}></div>
+          </header>
 
-        {/* Content Card */}
-        <div style={{
-          background: 'var(--gray-800)',
-          border: '1px solid var(--gray-700)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '1.75rem',
-          animation: 'fadeIn 0.4s ease',
-          minHeight: '300px',
-        }}>
-          {activeMenu === 'status' && <StatusCuti onRefresh={refreshKey} />}
-          {activeMenu === 'kalender' && <KalenderLibur />}
-          {activeMenu === 'ajukan' && (
-            <FormPengajuan onSuccess={refresh} showToast={show} />
-          )}
-          {activeMenu === 'histori' && <HistoriCuti refreshKey={refreshKey} />}
+          <section className="fade-in" style={{ 
+            backgroundColor: '#ffffff', 
+            borderRadius: 'var(--radius-lg)', 
+            border: '1px solid var(--border-color)', 
+            padding: '2.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+          }}>
+            {activeMenu === 'status' && <StatusCuti onRefresh={refreshKey} />}
+            {activeMenu === 'kalender' && <KalenderLibur />}
+            {activeMenu === 'ajukan' && (
+              <FormPengajuan onSuccess={refresh} showToast={show} />
+            )}
+            {activeMenu === 'histori' && <HistoriCuti refreshKey={refreshKey} />}
+          </section>
         </div>
       </main>
 

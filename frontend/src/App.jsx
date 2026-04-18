@@ -1,6 +1,5 @@
 /**
  * SIMCUTI — App Router
- * Route utama: Login → KaryawanDashboard atau AdminDashboard
  */
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
@@ -12,25 +11,24 @@ import './App.css';
 export default function App() {
   const { user, loading } = useAuth();
 
-  // Saat pertama kali load — cek localStorage auth
   if (loading) {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        background: 'var(--gray-900)', gap: '1rem',
+        backgroundColor: 'var(--bg-main)', gap: '1.5rem',
       }}>
-        <div style={{ fontSize: '2.5rem' }}>🏢</div>
-        <p style={{ color: 'var(--gray-400)', fontSize: '1rem', fontWeight: 500 }}>Memuat SIMCUTI...</p>
-        <Spinner color="purple" size="lg" />
+        <div style={{ fontSize: '3rem', animation: 'pulse 2s infinite' }}>🏢</div>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 500, letterSpacing: '0.05em' }}>
+          Memuat SIMCUTI...
+        </p>
+        <Spinner color="gray" size="lg" />
       </div>
     );
   }
 
-  // Belum login → tampilkan halaman Login
   if (!user) return <LoginPage />;
 
-  // Sudah login → redirect sesuai role
   if (user.role === 'admin') return <AdminDashboard />;
   return <KaryawanDashboard />;
 }

@@ -1,7 +1,5 @@
 /**
- * SIMCUTI — LoginPage
- * Halaman login & register dengan tab switching.
- * Setelah sukses, redirect ke dashboard sesuai role.
+ * SIMCUTI — LoginPage (White & Blue Minimalist)
  */
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -10,12 +8,10 @@ import { useToast, Toast, Spinner } from '../components/shared';
 export default function LoginPage() {
   const { login, register } = useAuth();
   const { toast, show, close } = useToast();
-  const [tab, setTab] = useState('login'); // 'login' | 'register'
+  const [tab, setTab] = useState('login');
   const [loading, setLoading] = useState(false);
 
-  // Login form state
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
-  // Register form state
   const [regForm, setRegForm] = useState({
     email: '', name: '', password: '', confirmPassword: '',
     department: '', role: 'karyawan',
@@ -29,7 +25,6 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(loginForm.email, loginForm.password);
-      // Redirect dihandle oleh App.jsx setelah user di-set
     } catch (err) {
       show(err.message || 'Login gagal.', 'error');
     } finally {
@@ -45,18 +40,11 @@ export default function LoginPage() {
     if (regForm.password !== regForm.confirmPassword) {
       show('Konfirmasi password tidak cocok.', 'error'); return;
     }
-    if (regForm.password.length < 6) {
-      show('Password minimal 6 karakter.', 'warning'); return;
-    }
     setLoading(true);
     try {
-      await register({
-        email: regForm.email, name: regForm.name, password: regForm.password,
-        department: regForm.department || null, role: regForm.role,
-      });
+      await register({ ...regForm });
       show('Pendaftaran berhasil! Silakan login.', 'success');
       setTab('login');
-      setLoginForm({ email: regForm.email, password: '' });
     } catch (err) {
       show(err.message || 'Pendaftaran gagal.', 'error');
     } finally {
@@ -67,96 +55,57 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+      backgroundColor: '#fafafa',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: '2rem',
-      position: 'relative', overflow: 'hidden',
     }}>
-      {/* Background decoration */}
-      <div style={{
-        position: 'absolute', top: '-15%', right: '-10%',
-        width: '500px', height: '500px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '-15%', left: '-10%',
-        width: '400px', height: '400px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(5,150,105,0.15) 0%, transparent 70%)',
-        pointerEvents: 'none',
-      }} />
-
-      {/* Logo & Header */}
-      <div style={{ textAlign: 'center', marginBottom: '2rem', animation: 'fadeIn 0.6s ease' }}>
-        <div style={{
-          width: 64, height: 64, borderRadius: '20px', margin: '0 auto 1rem',
-          background: 'linear-gradient(135deg, var(--karyawan-primary), var(--karyawan-dark))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '2rem', boxShadow: 'var(--shadow-glow-purple)',
-        }}>🏢</div>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'white', letterSpacing: '-0.03em' }}>
+      {/* Brand Header */}
+      <div style={{ textAlign: 'center', marginBottom: '2.5rem' }} className="fade-in">
+        <h1 style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.04em' }}>
           SIMCUTI
         </h1>
-        <p style={{ color: 'var(--gray-400)', marginTop: '0.25rem', fontSize: '0.9rem' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.5rem' }}>
           Sistem Informasi Manajemen Cuti Karyawan
-        </p>
-        <p style={{ color: 'var(--gray-600)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-          Institut Teknologi Kalimantan — Komputasi Awan
         </p>
       </div>
 
-      {/* Card */}
-      <div style={{
-        width: '100%', maxWidth: '440px',
-        background: 'rgba(30, 27, 75, 0.6)',
-        border: '1px solid rgba(124, 58, 237, 0.3)',
-        borderRadius: 'var(--radius-xl)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
-        overflow: 'hidden',
-        animation: 'fadeIn 0.6s ease 0.1s both',
+      {/* Auth Card */}
+      <div className="card fade-in" style={{ 
+        width: '100%', maxWidth: '420px', padding: 0, overflow: 'hidden',
+        border: '1px solid var(--border-color)',
+        boxShadow: '0 4px 20px -2px rgba(0,0,0,0.03)'
       }}>
-        {/* Tabs */}
-        <div style={{
-          display: 'flex', borderBottom: '1px solid rgba(124,58,237,0.2)',
-          background: 'rgba(0,0,0,0.2)',
-        }}>
+        {/* Tab Switcher */}
+        <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', backgroundColor: '#fff' }}>
           {['login', 'register'].map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               style={{
-                flex: 1, padding: '1rem', border: 'none', cursor: 'pointer',
-                fontSize: '0.9rem', fontWeight: 600, fontFamily: 'inherit',
-                transition: 'all 0.2s ease',
-                background: tab === t
-                  ? 'linear-gradient(135deg, rgba(124,58,237,0.3), rgba(91,33,182,0.3))'
-                  : 'transparent',
-                color: tab === t ? 'var(--karyawan-300)' : 'var(--gray-500)',
-                borderBottom: tab === t ? '2px solid var(--karyawan-primary)' : '2px solid transparent',
+                flex: 1, padding: '1.25rem', border: 'none', background: 'none',
+                fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer',
+                color: tab === t ? 'var(--primary)' : 'var(--text-muted)',
+                borderBottom: tab === t ? '2px solid var(--primary)' : '2px solid transparent',
+                transition: 'all 0.2s',
               }}
             >
-              {t === 'login' ? '🔑 Masuk' : '📝 Daftar'}
+              {t === 'login' ? 'Masuk' : 'Daftar Akun'}
             </button>
           ))}
         </div>
 
-        <div style={{ padding: '1.75rem' }}>
-          {/* ===== LOGIN FORM ===== */}
-          {tab === 'login' && (
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ padding: '2.5rem 2rem' }}>
+          {tab === 'login' ? (
+            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label">Alamat Email</label>
                 <input
                   type="email"
                   className="form-input"
-                  placeholder="email@simcuti.id"
+                  placeholder="name@company.com"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                  id="login-email"
-                  autoComplete="email"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
               <div className="form-group">
@@ -167,105 +116,82 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={loginForm.password}
                   onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                  id="login-password"
-                  autoComplete="current-password"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary-purple btn-lg"
-                disabled={loading}
-                id="btn-login"
-                style={{ marginTop: '0.5rem', width: '100%' }}
-              >
-                {loading ? <Spinner size="sm" /> : '🔑 Masuk ke SIMCUTI'}
+              <button type="submit" className="btn btn-primary-purple btn-lg" disabled={loading} style={{ width: '100%' }}>
+                {loading ? <Spinner size="sm" color="white" /> : 'Masuk ke Sistem'}
               </button>
 
-              {/* Demo accounts info */}
-              <div style={{
-                marginTop: '0.5rem', padding: '0.875rem',
-                background: 'rgba(124,58,237,0.08)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                borderRadius: 'var(--radius-md)',
-                fontSize: '0.8rem', color: 'var(--gray-400)',
-              }}>
-                <p style={{ fontWeight: 600, color: 'var(--karyawan-300)', marginBottom: '0.375rem' }}>
-                  💡 Akun Demo:
+              {/* Demo Section */}
+              <div style={{ marginTop: '2rem', padding: '1.25rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Akses Cepat (Demo):
                 </p>
-                <p>👔 Admin: <code style={{ color: 'var(--karyawan-200)' }}>admin@simcuti.id / Admin@2026</code></p>
-                <p>👤 Karyawan: <code style={{ color: 'var(--karyawan-200)' }}>irwan@simcuti.id / Karya@2026</code></p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  <p>Admin: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>admin@simcuti.id</span> / Admin@2026</p>
+                  <p>Staff: <span style={{ color: 'var(--primary)', fontWeight: 600 }}>irwan@simcuti.id</span> / Karya@2026</p>
+                </div>
               </div>
             </form>
-          )}
-
-          {/* ===== REGISTER FORM ===== */}
-          {tab === 'register' && (
-            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+          ) : (
+            <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column' }}>
               <div className="form-group">
                 <label className="form-label">Nama Lengkap</label>
                 <input
                   type="text"
                   className="form-input"
-                  placeholder="Nama lengkap Anda"
+                  placeholder="Ketik nama lengkap Anda"
                   value={regForm.name}
                   onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
-                  id="reg-name"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Email</label>
+                <label className="form-label">Alamat Email Kerja</label>
                 <input
                   type="email"
                   className="form-input"
                   placeholder="email@perusahaan.id"
                   value={regForm.email}
                   onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-                  id="reg-email"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
-              <div className="form-group">
-                <label className="form-label">Departemen</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="Contoh: Engineering, HR, Finance"
-                  value={regForm.department}
-                  onChange={(e) => setRegForm({ ...regForm, department: e.target.value })}
-                  id="reg-dept"
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
-                />
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Departemen</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Contoh: HR"
+                    value={regForm.department}
+                    onChange={(e) => setRegForm({ ...regForm, department: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Peran</label>
+                  <select
+                    className="form-select"
+                    value={regForm.role}
+                    onChange={(e) => setRegForm({ ...regForm, role: e.target.value })}
+                  >
+                    <option value="karyawan">Karyawan</option>
+                    <option value="admin">Admin (HR)</option>
+                  </select>
+                </div>
               </div>
+
               <div className="form-group">
-                <label className="form-label">Peran</label>
-                <select
-                  className="form-select"
-                  value={regForm.role}
-                  onChange={(e) => setRegForm({ ...regForm, role: e.target.value })}
-                  id="reg-role"
-                  style={{ background: 'rgba(30,27,75,0.8)', borderColor: 'rgba(124,58,237,0.3)', color: 'white' }}
-                >
-                  <option value="karyawan">👤 Karyawan</option>
-                  <option value="admin">👔 Admin (HR)</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Password</label>
+                <label className="form-label">Password Baru</label>
                 <input
                   type="password"
                   className="form-input"
-                  placeholder="Min. 6 karakter"
                   value={regForm.password}
                   onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
-                  id="reg-password"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
               <div className="form-group">
@@ -273,23 +199,14 @@ export default function LoginPage() {
                 <input
                   type="password"
                   className="form-input"
-                  placeholder="Ulangi password"
                   value={regForm.confirmPassword}
                   onChange={(e) => setRegForm({ ...regForm, confirmPassword: e.target.value })}
-                  id="reg-confirm"
                   required
-                  style={{ background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(124,58,237,0.3)' }}
                 />
               </div>
 
-              <button
-                type="submit"
-                className="btn btn-primary-purple btn-lg"
-                disabled={loading}
-                id="btn-register"
-                style={{ marginTop: '0.5rem', width: '100%' }}
-              >
-                {loading ? <Spinner size="sm" /> : '📝 Daftar Sekarang'}
+              <button type="submit" className="btn btn-primary-purple btn-lg" disabled={loading} style={{ width: '100%', marginTop: '0.5rem' }}>
+                {loading ? <Spinner size="sm" color="white" /> : 'Daftar Sekarang'}
               </button>
             </form>
           )}
@@ -297,9 +214,14 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <p style={{ marginTop: '1.5rem', color: 'var(--gray-600)', fontSize: '0.75rem' }}>
-        © 2026 SIMCUTI — Komputasi Awan, SI ITK
-      </p>
+      <div style={{ marginTop: '3rem', textAlign: 'center' }} className="fade-in">
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.8125rem' }}>
+          © 2026 SIMCUTI — Institut Teknologi Kalimantan
+        </p>
+        <p style={{ color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+          Cloud Computing SI ITK
+        </p>
+      </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={close} />}
     </div>

@@ -1,21 +1,25 @@
 /**
- * SIMCUTI — Shared Components
- * Spinner, Toast, Navbar
+ * SIMCUTI — Shared Components (White & Blue Minimalist)
  */
+import { useState } from 'react';
 
 /* ========== Spinner ========== */
-export function Spinner({ size = 'md', color = 'purple' }) {
-  const sizes = { sm: 20, md: 32, lg: 48 };
-  const s = sizes[size] || 32;
-  const clr = color === 'green' ? 'var(--admin-primary)' : 'var(--karyawan-primary)';
+export function Spinner({ size = 'md', color = 'primary' }) {
+  const sizes = { sm: 16, md: 28, lg: 44 };
+  const s = sizes[size] || 28;
+  
+  const clr = color === 'primary' ? 'var(--primary)' : 
+              color === 'gray' ? 'var(--text-muted)' : 
+              'var(--primary)';
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <svg
         width={s} height={s}
         viewBox="0 0 24 24" fill="none"
-        style={{ animation: 'spin 0.8s linear infinite' }}
+        style={{ animation: 'spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite' }}
       >
-        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.1)" strokeWidth="3" />
+        <circle cx="12" cy="12" r="10" stroke="var(--border-color)" strokeWidth="2" />
         <path
           d="M12 2a10 10 0 0 1 10 10"
           stroke={clr} strokeWidth="3" strokeLinecap="round"
@@ -29,40 +33,48 @@ export function Spinner({ size = 'md', color = 'purple' }) {
 let toastTimeout = null;
 
 export function Toast({ message, type = 'info', onClose }) {
-  const colors = {
-    success: { bg: '#065f46', border: '#6ee7b7', icon: '✅' },
-    error: { bg: '#7f1d1d', border: '#fca5a5', icon: '❌' },
-    info: { bg: '#1e3a5f', border: '#93c5fd', icon: 'ℹ️' },
-    warning: { bg: '#78350f', border: '#fcd34d', icon: '⚠️' },
+  const styles = {
+    success: { border: '#10b981', icon: '✓' },
+    error: { border: '#ef4444', icon: '!' },
+    info: { border: 'var(--primary)', icon: 'i' },
+    warning: { border: '#f59e0b', icon: '!' },
   };
-  const c = colors[type] || colors.info;
+  const s = styles[type] || styles.info;
 
   return (
     <div
       style={{
-        position: 'fixed', top: '1.5rem', right: '1.5rem', zIndex: 9999,
-        background: c.bg, border: `1px solid ${c.border}`,
-        borderRadius: 'var(--radius-lg)',
-        padding: '0.875rem 1.25rem',
-        display: 'flex', alignItems: 'center', gap: '0.75rem',
-        minWidth: '280px', maxWidth: '420px',
-        boxShadow: 'var(--shadow-xl)',
-        animation: 'fadeIn 0.3s ease',
-        color: 'white',
-        fontSize: '0.9rem',
-        fontWeight: 500,
+        position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999,
+        backgroundColor: '#ffffff',
+        border: '1px solid var(--border-color)',
+        borderRadius: 'var(--radius-md)',
+        padding: '1rem 1.5rem',
+        display: 'flex', alignItems: 'center', gap: '1rem',
+        minWidth: '320px', maxWidth: '480px',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      <span>{c.icon}</span>
-      <span style={{ flex: 1 }}>{message}</span>
+      <div style={{
+        width: 22, height: 22, borderRadius: '50%', 
+        background: s.border, color: 'white', 
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '0.8rem', fontWeight: 800, flexShrink: 0
+      }}>
+        {s.icon}
+      </div>
+      <span style={{ flex: 1, fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
+        {message}
+      </span>
       <button
         onClick={onClose}
         style={{
-          background: 'rgba(255,255,255,0.12)', border: 'none', color: 'white',
-          width: 24, height: 24, borderRadius: '50%', cursor: 'pointer',
-          fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexShrink: 0,
+          background: 'none', border: 'none', color: 'var(--text-muted)',
+          cursor: 'pointer', fontSize: '1.25rem', padding: '0 0.5rem',
+          lineHeight: 1, transition: 'color 0.2s'
         }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
       >×</button>
     </div>
   );
@@ -84,5 +96,3 @@ export function useToast() {
 
   return { toast, show, close };
 }
-
-import { useState } from 'react';

@@ -5,7 +5,6 @@ Semua operasi database dan kalkulasi ada di sini.
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 from sqlalchemy.orm import Session
-<<<<<<< HEAD
 from sqlalchemy import func, and_, or_
 
 from models import User, LeaveRequest, Holiday
@@ -51,78 +50,59 @@ def count_working_days(start_date: date, end_date: date, db: Session) -> int:
 
 
 def get_used_leave_days(user_id: int, db: Session) -> int:
-    """Hitung total hari cuti yang sudah digunakan (approved) oleh user pada tahun berjalan."""
+    """
+    Hitung total hari cuti yang sudah digunakan (approved) oleh user pada tahun berjalan.
+    Menggunakan sum() untuk efisiensi jika dalam satu tahun, 
+    dan recalculate hanya jika melintasi tahun.
+    """
     current_year = datetime.now().year
-    result = db.query(func.sum(LeaveRequest.working_days)).filter(
+    year_start = date(current_year, 1, 1)
+    year_end = date(current_year, 12, 31)
+
+    leaves = db.query(LeaveRequest).filter(
         LeaveRequest.user_id == user_id,
         LeaveRequest.status == "approved",
-        func.extract("year", LeaveRequest.start_date) == current_year,
-    ).scalar()
-    return result or 0
-=======
-from passlib.context import CryptContext
+        or_(
+            and_(LeaveRequest.start_date >= year_start, LeaveRequest.start_date <= year_end),
+            and_(LeaveRequest.end_date >= year_start, LeaveRequest.end_date <= year_end),
+            and_(LeaveRequest.start_date < year_start, LeaveRequest.end_date > year_end)
+        )
+    ).all()
 
-from models import User, UserRole
-from schemas import UserCreate, UserUpdate
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-# ==================== PASSWORD ====================
-
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
-
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
->>>>>>> ad6031cfa72468c089f9b36d076169268b9573e2
+    total_days = 0
+    for l in leaves:
+        if l.start_date >= year_start and l.end_date <= year_end:
+            # Full dalam tahun ini, gunakan yang tersimpan
+            total_days += l.working_days
+        else:
+            # Melintasi batas tahun, hitung proporsional
+            effective_start = max(l.start_date, year_start)
+            effective_end = min(l.end_date, year_end)
+            total_days += count_working_days(effective_start, effective_end, db)
+        
+    return total_days
 
 
 # ==================== USER CRUD ====================
 
-<<<<<<< HEAD
 def create_user(db: Session, user_data: UserCreate) -> Optional[User]:
     """Buat user baru. Return None jika email sudah terdaftar."""
     existing = db.query(User).filter(User.email == user_data.email).first()
     if existing:
-=======
-def get_user_by_email(db: Session, email: str) -> User | None:
-    return db.query(User).filter(User.email == email).first()
-
-
-def get_user_by_id(db: Session, user_id: int) -> User | None:
-    return db.query(User).filter(User.id == user_id).first()
-
-
-def create_user(db: Session, user_data: UserCreate) -> User | None:
-    """Buat user baru. Return None jika email sudah terdaftar."""
-    if get_user_by_email(db, user_data.email):
->>>>>>> ad6031cfa72468c089f9b36d076169268b9573e2
         return None
 
     user = User(
         email=user_data.email,
         name=user_data.name,
         hashed_password=hash_password(user_data.password),
-<<<<<<< HEAD
         role=user_data.role or "karyawan",
         department=user_data.department,
         join_date=user_data.join_date or date.today(),
-=======
-        role=user_data.role,
-        department=user_data.department,
-        position=user_data.position,
-        phone=user_data.phone,
-        leave_quota=user_data.leave_quota,
-        work_start_date=user_data.work_start_date,
->>>>>>> ad6031cfa72468c089f9b36d076169268b9573e2
     )
     db.add(user)
     db.commit()
     db.refresh(user)
     return user
-<<<<<<< HEAD
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
@@ -325,11 +305,11 @@ def calculate_saw(db: Session) -> SAWResponse:
     (sisa kuota banyak, jarang pending berlebihan, approval rate tinggi, masa kerja lama)
     """
     BOBOT = {
-        "sisa_kuota": 0.30,
-        "total_pengajuan": 0.20,
-        "pending": 0.20,
-        "approval_rate": 0.15,
-        "masa_kerja": 0.15,
+        "sisa_kuota": 0.30,      # Benefit
+        "total_pengajuan": 0.20, # Cost
+        "pending": 0.20,         # Cost
+        "approval_rate": 0.15,   # Benefit
+        "masa_kerja": 0.15,      # Benefit
     }
 
     karyawans = get_all_karyawan(db)
@@ -352,13 +332,13 @@ def calculate_saw(db: Session) -> SAWResponse:
             LeaveRequest.user_id == k.id, LeaveRequest.status == "rejected"
         ).count()
 
-        # Approval rate (dari non-pending, hindari division by zero)
+        # Approval rate (dari non-pending, neutral 50% jika belum ada data)
         non_pending = total_requests - pending
-        approval_rate = (approved / non_pending * 100) if non_pending > 0 else 100.0
+        approval_rate = (approved / non_pending * 100) if non_pending > 0 else 50.0
 
         # Total hari cuti yang sudah digunakan
         used_days = get_used_leave_days(k.id, db)
-        remaining_quota = k.annual_leave_quota - used_days
+        remaining_quota = max(k.annual_leave_quota - used_days, 0)
 
         # Masa kerja dalam hari
         jd = k.join_date if k.join_date else today
@@ -383,26 +363,41 @@ def calculate_saw(db: Session) -> SAWResponse:
     # Benefit: nilai / max(nilai)
     # Cost: min(nilai) / nilai
 
+    # ===== LANGKAH 1: Normalisasi Matriks (Linear Scale) =====
     max_sisa_kuota = max(r["remaining_quota"] for r in raw_data) or 1
-    min_total_req = min(r["total_requests"] for r in raw_data) or 1
+    min_sisa_kuota = min(r["remaining_quota"] for r in raw_data)
+    
+    max_total_req = max(r["total_requests"] for r in raw_data) or 1
+    min_total_req = min(r["total_requests"] for r in raw_data)
+    
+    max_pending = max(r["pending"] for r in raw_data) or 1
     min_pending = min(r["pending"] for r in raw_data)
+    
     max_approval_rate = max(r["approval_rate"] for r in raw_data) or 1
+    min_approval_rate = min(r["approval_rate"] for r in raw_data)
+    
     max_masa_kerja = max(r["masa_kerja"] for r in raw_data) or 1
+    min_masa_kerja = min(r["masa_kerja"] for r in raw_data)
 
     # ===== LANGKAH 2: Hitung Skor SAW =====
     result_data = []
     for i, r in enumerate(raw_data):
         k = r["user"]
 
-        # Normalisasi setiap kriteria
-        n_sisa_kuota = r["remaining_quota"] / max_sisa_kuota  # benefit
+        # Normalisasi Sisa Kuota (Benefit)
+        n_sisa_kuota = (r["remaining_quota"] - min_sisa_kuota) / (max_sisa_kuota - min_sisa_kuota) if max_sisa_kuota > min_sisa_kuota else 1.0
 
-        # Cost: cegah division by zero
-        n_total_req = min_total_req / r["total_requests"] if r["total_requests"] > 0 else 1.0
-        n_pending = min_pending / r["pending"] if r["pending"] > 0 else 1.0
+        # Normalisasi Total Pengajuan (Cost)
+        n_total_req = (max_total_req - r["total_requests"]) / (max_total_req - min_total_req) if max_total_req > min_total_req else 1.0
 
-        n_approval_rate = r["approval_rate"] / max_approval_rate  # benefit
-        n_masa_kerja = r["masa_kerja"] / max_masa_kerja  # benefit
+        # Normalisasi Pending (Cost)
+        n_pending = (max_pending - r["pending"]) / (max_pending - min_pending) if max_pending > min_pending else 1.0
+
+        # Normalisasi Approval Rate (Benefit)
+        n_approval_rate = (r["approval_rate"] - min_approval_rate) / (max_approval_rate - min_approval_rate) if max_approval_rate > min_approval_rate else 1.0
+
+        # Normalisasi Masa Kerja (Benefit)
+        n_masa_kerja = (r["masa_kerja"] - min_masa_kerja) / (max_masa_kerja - min_masa_kerja) if max_masa_kerja > min_masa_kerja else 1.0
 
         # Skor SAW = Σ(bobot * nilai_normalisasi)
         saw_score = (
@@ -438,48 +433,3 @@ def calculate_saw(db: Session) -> SAWResponse:
         item.rank = i + 1
 
     return SAWResponse(bobot=BOBOT, data=result_data)
-=======
-
-
-def authenticate_user(db: Session, email: str, password: str) -> User | None:
-    """Verifikasi email & password. Return user jika valid."""
-    user = get_user_by_email(db, email)
-    if not user or not verify_password(password, user.hashed_password):
-        return None
-    if not user.is_active:
-        return None
-    return user
-
-
-def update_user(db: Session, user_id: int, user_data: UserUpdate) -> User | None:
-    """Update data user. Hanya field yang dikirim yang diupdate."""
-    user = get_user_by_id(db, user_id)
-    if not user:
-        return None
-
-    update_fields = user_data.model_dump(exclude_unset=True)
-    for field, value in update_fields.items():
-        setattr(user, field, value)
-
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-def get_all_users(
-    db: Session,
-    role: str | None = None,
-    skip: int = 0,
-    limit: int = 50,
-) -> dict:
-    """Ambil semua user dengan filter role opsional."""
-    query = db.query(User)
-    if role:
-        try:
-            query = query.filter(User.role == UserRole(role))
-        except ValueError:
-            pass
-    total = query.count()
-    users = query.offset(skip).limit(limit).all()
-    return {"total": total, "users": users}
->>>>>>> ad6031cfa72468c089f9b36d076169268b9573e2
