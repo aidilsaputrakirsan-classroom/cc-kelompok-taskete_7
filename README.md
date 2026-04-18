@@ -457,77 +457,20 @@ Hasil testing/penguujian tersebut terdapat pada file docs/ui-test-result.md
 
 Pada tahap ini dilakukan pengujian awal dengan membuka aplikasi melalui browser menggunakan alamat ```http://localhost:5173```. Untuk memastikan bahwa frontend berhasil dijalankan dan dapat diakses dengan baik oleh pengguna dan mengecek status API Connected untuk memastikan bahwa komunikasi antara frontend dan backend berjalan dengan baik sebelum melakukan pengujian fitur lainnya.
 
-1. Muncul page login ✅
-![Gambar](Screenshotmodul4/1.png)
-Hasil testing menunjukkan bahwa sistem menampilkan halaman login kepada pengguna. Pada halaman page login ini pengguna diminta untuk memasukkan kredensial seperti username dan password.
+| No | Pengujian | Hasil yang Diharapkan | Status |
+|----|-----------|------------------------|--------|
+| 1 | Buka `localhost:3000` | Halaman login muncul | ✅ Berhasil |
+| 2 | Register user baru | User baru berhasil didaftarkan | ✅ Berhasil|
+| 3 | Setelah register | User otomatis login | ✅ Berhasil |
+| 4 | Masuk ke aplikasi utama | Halaman utama dan daftar items muncul | ✅ Berhasil |
+| 5 | Header aplikasi | Nama user tampil di header | ✅ Berhasil |
+| 6 | CRUD items | Tambah, edit, dan hapus item berfungsi | ✅ Berhasil|
+| 7 | Klik Logout | User berhasil logout | ✅ Berhasil|
+| 8 | Setelah logout | Kembali ke halaman login | ✅ Berhasil|
+| 9 | Login kembali dengan akun tadi | Login berhasil |✅ Berhasil |
+| 10 | Setelah login kembali | Data items masih ada | ✅ Berhasil|
 
-
-2. Register User baru ✅
-![Gambar](Screenshotmodul4/2.png)
-
-Dilakukan pengujian membuat akun pengguna baru melalui halaman registrasi. Pengguna diminta untuk mengisi data seperti username, email dan password. Setelah data diisi dan dikirim sistem memproses pendaftaran dan menyimpan data pengguna ke dalam database.  
-
-3. Login otomatis setelah register ✅
-![Gambar](Screenshotmodul4/3.png)
-
-Setelah berhasil melakukan register, sistem secara otomotasi melakukan proses login tanpa perlu pengguna memasukkan ulang username dan password. Hal ini dilakukan dengan cara sistem langsung menggunakan data registrasi atau token yang diterima dari backend untuk mengautentikasi pengguna. Setelah itu, pengguna akan langsung diarahkan ke halaman utama aplikasi dalam keadaan sudah terlogin.
-
-
-4. . Main app & items muncul ✅
-![Gambar](Screenshotmodul4/4.png)
-
-Sistem menampilkan daftar items dari database melalui API. 
-
-5. Nama User di header ✅
-![Gambar](Screenshotmodul4/5.png)
-Hasil testing menunjukkan pada bagian header terdapat nama pengguna yang telah di masukkan pada saat register.
-
-6. CRUD items berfungsi ✅
-
-Pengujian dilakukan dengan melakukan tes untuk CRUD (Create, Read, update, Delete)
-
-- CREATE ITEMS  
-![Gambar](Screenshotmodul4/6.png)
-
-Dilakukan pengujian dengan menambahkan item baru melalui form dan mengisi data seperti nama item, Harga, Deskripsi dan Jumlah stok
-
-- READ ITEMS
-![Gambar](Screenshotmodul4/7.png)
-
-Setelah items ditambahkan, muncul items yang sudah di tambahkan tersebut pada halaman utama sebagai bagian dari daftar item yang tersimpan di dalam sistem.
-
-- UPDATE ITEMS
-![Gambar](Screenshotmodul4/8.png)
-
-Dilakukan Update items dengan mengubah jumlah stok yang ada dan meng-klik update item
-
-- ITEMS TER-UPDATE
-![Gambar](Screenshotmodul4/9.png)
-
-Fungsi update items masih berjalan dengan baik terlihat pada jumlah stok yang sebelumnya ``` 20 ``` menjadi ``` 10 ``` sesuai dengan stok yang di input 
-
-- DELETE ITEMS
-![Gambar](Screenshotmodul4/10.png)
-
-Saat tombol Hapus dipilih, hasil pengujian menunjukkan sistem menampilkan dialog konfirmasi sebelum item dihapus.
-
-7. Klick Logout ✅
-![Gambar](Screenshotmodul4/11.png)
-
-Saat klick logout, akan kembali langsung ke login page 
-
-8. Kembali ke login page ✅
-![Gambar](Screenshotmodul4/12.png)
-
-9. Login dengan akun yang sudah dibuat sebelumnya ✅
-![Gambar](Screenshotmodul4/13.png)
-
-Login dengan akun yang sudah didaftar sebelumnya
-
-10.  Data items masih ada ✅
-![Gambar](Screenshotmodul4/14.png)
-
-Masuk ke dalam halaman utama dan masih ada data items yang sebelumnya tidak dihapus.
+**Hasil akhir:** SEMUA PASS ✅
 
 
 ## Endpoint API 
@@ -549,7 +492,9 @@ Masuk ke dalam halaman utama dan masih ada data items yang sebelumnya tidak diha
 | 10  | GET   | ```/team ```            | Public        | Mengambil informasi data tim pengembang yang ditampilkan pada aplikasi |
 
 
+[Modul 2 - Dokumentasi pengujian seluruh endpoint API menggunakan Swagger ](docs/api-test-results.md)
 
+[Modul 3 - Dokumentasi ui test result ](docs/ui-test-results.md)
 
-
+[Modul 6 - Dokumentasi 	Bandingkan ukuran image](docs/image-comparison.md)
 

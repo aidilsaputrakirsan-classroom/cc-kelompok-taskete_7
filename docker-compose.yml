@@ -18,56 +18,56 @@ services:
   # DATABASE — PostgreSQL 16
   # Data persist via named volume pgdata
   # =====================================================
-  db:
-    image: postgres:16-alpine
-    container_name: simcuti-db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres123
-      POSTGRES_DB: simcuti
+  db: # Nama service database
+    image: postgres:16-alpine # Menggunakan image PostgreSQL versi 16 berbasis Alpine
+    container_name: simcuti-db # Nama container agar mudah dikenali
+    restart: unless-stopped # Container akan restart otomatis kecuali dihentikan manual
+    environment: # Variabel environment untuk konfigurasi PostgreSQL
+      POSTGRES_USER: postgres # Username database
+      POSTGRES_PASSWORD: postgres123 # Password database
+      POSTGRES_DB: simcuti # Nama database yang otomatis dibuat
     ports:
       - "5433:5432"   # Port 5433 di host (hindari konflik dgn PostgreSQL lokal di 5432)
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data # Menyimpan data database ke named volume
     networks:
-      - simcuti-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d simcuti"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 15s
+      - simcuti-net # Menghubungkan container ke network internal
+    healthcheck: # Mengecek apakah database sudah siap digunakan
+      test: ["CMD-SHELL", "pg_isready -U postgres -d simcuti"] # Perintah pengecekan database
+      interval: 10s # Cek setiap 10 detik
+      timeout: 5s # Maksimal tunggu 5 detik tiap pengecekan
+      retries: 5 # Gagal 5 kali baru dianggap unhealthy
+      start_period: 15s # Tunggu 15 detik sebelum healthcheck dimulai
 
   # =====================================================
   # BACKEND — FastAPI + Uvicorn
   # Tunggu DB healthy sebelum start
   # Auto-seed data awal setelah app ready
   # =====================================================
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: simcuti-backend
-    restart: unless-stopped
+  backend: # Nama service backend
+    build: # Instruksi build image backend
+      context: ./backend # Folder sumber backend
+      dockerfile: Dockerfile # File Dockerfile yang digunakan
+    container_name: simcuti-backend # Nama container backend
+    restart: unless-stopped # Backend restart otomatis jika error
     env_file:
-      - ./backend/.env.docker
+      - ./backend/.env.docker # Mengambil environment variable dari file .env.docker
     ports:
-      - "8000:8000"
+      - "8000:8000" # Port backend dibuka ke host pada port 8000
     networks:
-      - simcuti-net
-    depends_on:
+      - simcuti-net # Backend terhubung ke network yang sama dengan DB
+    depends_on: 
       db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+        condition: service_healthy # Backend baru jalan jika database healthy
+    healthcheck: # Mengecek apakah backend berjalan normal
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"] # Mengecek endpoint /health
+      interval: 30s # Healthcheck dilakukan setiap 30 detik
+      timeout: 10s # Timeout 10 detik
+      retries: 3 # Maksimal 3 kali gagal
+      start_period: 20s # Tunggu 20 detik setelah container start
     # Jalankan seed.py setelah app siap (untuk data awal)
     command: >
-      sh -c "
+      sh -c " 
         uvicorn main:app --host 0.0.0.0 --port 8000 &
         sleep 5 &&
         python seed.py &&
@@ -78,29 +78,29 @@ services:
   # FRONTEND — React + Nginx (Multi-Stage Build)
   # Serve static files via Nginx pada port 3000
   # =====================================================
-  frontend:
+  frontend: # Nama service frontend
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
+      context: ./frontend # Folder sumber frontend React
+      dockerfile: Dockerfile # Dockerfile frontend
+      args: # Build argument yang dikirim ke Dockerfile
         # URL backend yang diakses dari BROWSER USER
         # Harus menggunakan localhost (host machine), bukan nama service Docker
-        VITE_API_URL: http://localhost:8000
-    container_name: simcuti-frontend
-    restart: unless-stopped
+        VITE_API_URL: http://localhost:8000 # URL backend yang dipakai React
+    container_name: simcuti-frontend # Nama container frontend
+    restart: unless-stopped # Frontend restart otomatis
     ports:
-      - "3000:80"
+      - "3000:80" # Port 3000 host diarahkan ke port 80 di container Nginx
     networks:
-      - simcuti-net
+      - simcuti-net # Frontend terhubung ke network internal
     depends_on:
-      - backend
+      - backend # Frontend dijalankan setelah backend
 
 # =====================================================
 # VOLUMES — Named volume untuk data persistence
 # =====================================================
 volumes:
-  pgdata:
-    name: simcuti-pgdata
+  pgdata:  # Nama volume untuk menyimpan data database
+    name: simcuti-pgdata  #Nama volume yang akan muncul di Docker
     # Data database akan tetap ada meskipun container dihapus
     # Untuk reset penuh: docker compose down -v
 
@@ -108,8 +108,8 @@ volumes:
 # NETWORKS — Custom bridge network untuk komunikasi
 # =====================================================
 networks:
-  simcuti-net:
-    name: simcuti-network
-    driver: bridge
+  simcuti-net:  # Nama network internal
+    name: simcuti-network # Nama network yang akan muncul di Docker
+    driver: bridge # Menggunakan tipe network bridge
     # Backend bisa akses DB via: postgresql://postgres:postgres123@db:5432/simcuti
     # (menggunakan nama service 'db' sebagai hostname di dalam network)

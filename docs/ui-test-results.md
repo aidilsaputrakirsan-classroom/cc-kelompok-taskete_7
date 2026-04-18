@@ -2,7 +2,7 @@
 
 ### 1. Cek Status API ✅
 
-![alt text](<Screenshot 2026-03-13 000253.png>)
+![](1.png)
 
 Saat aplikasi dibuka di ```localhost:5173``` indikator status API menunjukkan Connected. Hasil pengujian menandakan bahwa  frontend berhasil terhubung dengan backend dan tidak terjadi error pada koneksi API.
 
