@@ -54,28 +54,73 @@ graph LR
 
 ### Prasyarat
 - Python 3.10+
+
+  digunakan sebagai dasar untuk menjalankan sisi backend aplikasi yang dibangun dengan FastAPI. Versi ini dipilih karena sudah mendukung fitur terbaru serta kompatibel dengan berbagai library yang digunakan oleh FastAPI.
+
+  Dalam implementasinya, Python berperan untuk:
+
+  - Menjalankan server API menggunakan uvicorn
+  - Mengelola dan menginstal library melalui pip
+  - Menangani seluruh proses dan logika bisnis di backend
+  
 - Node.js 18+
+  
+    Node.js digunakan untuk menjalankan bagian frontend yang dibangun menggunakan React. Versi 18 ke atas direkomendasikan karena sudah mendukung fitur JavaScript terbaru serta kompatibel dengan tools modern seperti Vite.
+
+    Peran Node.js dalam pengembangan frontend meliputi:
+
+    - Menginstal berbagai dependency menggunakan npm install
+    - Menjalankan server development dengan npm run dev
+    - Mengelola package dan kebutuhan proyek frontend
+
+    Tanpa Node.js, aplikasi frontend tidak dapat dijalankan dengan baik.
+
+
 - Git
+  
+  Git merupakan sistem version control yang digunakan untuk mengelola kode selama proses pengembangan. Dengan Git, pengembang dapat melacak perubahan serta bekerja secara kolaboratif dalam satu proyek.
 
-### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+    Fungsi utama Git antara lain:
+
+    - Mengambil (clone) repository dari server
+    - Mengatur dan mencatat perubahan kode
+    - Memudahkan kerja sama dalam tim
+    - Mendukung integrasi dengan platform seperti  GitHub serta proses CI/CD
+
+## 📖 Quick Start
+
+Pastikan Docker Desktop sudah terinstal dan dalam kondisi aktif sebelum memulai.
+
+```
+docker compose up -d
 ```
 
-Buka http://localhost:8000 untuk verifikasi API berjalan.
+Menjalankan aplikasi dapat diakses melalui : 
 
-Buka http://localhost:8000/docs untuk melihat dokumentasi Swagger.
+- Frontend : http://localhost:3000
+- Backend API : http://localhost:8000
+- API Documentation: http://localhost:8000/docs
 
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
+### Menghentikan Aplikasi 
+
+Untuk menghentikan semua service, jalankan perintah berikut:
+
+```
+docker compose down
 ```
 
-Buka http://localhost:5173 untuk melihat aplikasi.
+## 🐳 Docker Compose Commands
+
+Berikut adalah beberapa perintah dasar Docker Compose yang digunakan:
+
+| Command                         | Keterangan                                   |
+|--------------------------------|----------------------------------------------|
+| docker compose up              | Menjalankan seluruh service                  |
+| docker compose up -d           | Menjalankan service di background (detached) |
+| docker compose down            | Menghentikan sekaligus menghapus container   |
+| docker compose logs            | Menampilkan log dari semua service           |
+| docker compose ps              | Menampilkan status container                 |
+| docker compose up -d --build   | Build ulang image lalu menjalankan service   |
 
 ## 📅 Roadmap
 
