@@ -27,6 +27,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy seluruh kode aplikasi
 COPY . .
 
+# User non-root (modul 5 — keamanan container)
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose port
 EXPOSE 8000
 

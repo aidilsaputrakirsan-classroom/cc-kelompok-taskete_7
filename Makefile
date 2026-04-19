@@ -6,8 +6,14 @@
 # Usage: make <target>
 # ============================================================
 
-.PHONY: up build down clean restart logs logs-backend logs-frontend logs-db ps \
+.PHONY: up run build down clean push restart logs logs-backend logs-frontend logs-db ps \
         shell-backend shell-db seed help
+
+# ===== Docker Hub (untuk: make push DOCKERHUB_USER=namauser) =====
+DOCKERHUB_USER ?=
+TAG ?= latest
+# Prefix image lokal setelah docker compose build (biasanya <nama-folder-repo>_backend)
+COMPOSE_IMAGE_PREFIX ?= cc-kelompok-taskete_7
 
 # ===== COLORS =====
 GREEN  = \033[0;32m
@@ -23,8 +29,9 @@ help:
 	@echo "$(CYAN)🏢 SIMCUTI — Docker Compose Commands$(RESET)"
 	@echo "$(CYAN)=====================================...$(RESET)"
 	@echo ""
-	@echo "$(GREEN)  make up$(RESET)              Start semua services (background)"
+	@echo "$(GREEN)  make up | make run$(RESET)   Start semua services (background); run = alias up"
 	@echo "$(GREEN)  make build$(RESET)           Rebuild images + start"
+	@echo "$(GREEN)  make push$(RESET)            Tag + push backend & frontend ke Docker Hub"
 	@echo "$(GREEN)  make down$(RESET)            Stop & hapus containers"
 	@echo "$(YELLOW)  make clean$(RESET)           Stop + hapus containers & volumes (⚠️ DATA HILANG!)"
 	@echo "$(GREEN)  make restart$(RESET)         Restart semua services"
@@ -38,7 +45,7 @@ help:
 	@echo "$(GREEN)  make seed$(RESET)            Jalankan database seeder"
 	@echo ""
 
-## Start semua services (background)
+## Start semua services (background) — sama dengan modul: make run
 up:
 	@echo "$(GREEN)🚀 Starting SIMCUTI services...$(RESET)"
 	docker compose up -d
@@ -48,6 +55,9 @@ up:
 	@echo "$(CYAN)   🔧 Backend  : http://localhost:8000$(RESET)"
 	@echo "$(CYAN)   📚 Swagger  : http://localhost:8000/docs$(RESET)"
 	@echo "$(CYAN)   🗄️  Database : localhost:5433$(RESET)"
+
+## Alias modul 5: make run = make up
+run: up
 
 ## Rebuild images + start
 build:
@@ -71,6 +81,21 @@ clean:
 	docker compose down -v
 	docker system prune -f
 	@echo "$(GREEN)✅ Semua container, volume, dan cache dihapus.$(RESET)"
+
+## Push image backend + frontend ke Docker Hub (login dulu: docker login)
+## Contoh: make push DOCKERHUB_USER=namauser TAG=latest
+## Jika error "No such image", cek nama image: docker images — lalu set COMPOSE_IMAGE_PREFIX=...
+push:
+	@if [ -z "$(DOCKERHUB_USER)" ]; then \
+		echo "Set DOCKERHUB_USER, contoh: make push DOCKERHUB_USER=namauser"; \
+		exit 1; \
+	fi
+	docker compose build backend frontend
+	docker tag $(COMPOSE_IMAGE_PREFIX)_backend:latest $(DOCKERHUB_USER)/simcuti-backend:$(TAG)
+	docker tag $(COMPOSE_IMAGE_PREFIX)_frontend:latest $(DOCKERHUB_USER)/simcuti-frontend:$(TAG)
+	docker push $(DOCKERHUB_USER)/simcuti-backend:$(TAG)
+	docker push $(DOCKERHUB_USER)/simcuti-frontend:$(TAG)
+	@echo "$(GREEN)✅ Push: $(DOCKERHUB_USER)/simcuti-backend:$(TAG) & simcuti-frontend:$(TAG)$(RESET)"
 
 ## Restart semua services
 restart:
