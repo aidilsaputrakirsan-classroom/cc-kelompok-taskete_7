@@ -500,3 +500,5 @@ Pada tahap ini dilakukan pengujian awal dengan membuka aplikasi melalui browser 
 
 [Modul 6 - Ukuran image SIMCUTI sebelum vs sesudah optimasi + push Docker Hub](docs/image-optimization-simcuti.md)
 
+[Modul 7 - Hasil pengujian Makefile (`make up`, `down`, `logs`, `build`, `clean`)](docs/makefile-testing-results.md)
+

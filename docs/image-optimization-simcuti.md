@@ -16,10 +16,24 @@ Angka di bawah diperoleh dari perintah `docker images` pada lingkungan pengemban
 
 | Image | Sebelum optimasi | Sesudah optimasi | Catatan |
 |--------|------------------|------------------|---------|
-| **Backend** `cc-kelompok-taskete_7-backend` | **~365 MB** (perkiraan satu-stage: `libpq-dev` + dependensi build tetap ada di image akhir) | **346 MB** | Diukur setelah multi-stage + venv; tanpa menyalin toolchain build ke stage final |
-| **Frontend** `cc-kelompok-taskete_7-frontend` | **~75 MB** | **74.5 MB** | Sudah multi-stage (Node build → Nginx); perubahan utama modul 6 ada di backend |
+| **Backend** `cc-kelompok-taskete_7-backend` | **~365 MB** (perkiraan satu-stage: `libpq-dev` + dependensi build tetap ada di image akhir) | **~346 MB** (lihat juga **345.59 MB** pada tangkapan layar Docker Desktop lokal) | Diukur setelah multi-stage + venv; tanpa menyalin toolchain build ke stage final |
+| **Frontend** `cc-kelompok-taskete_7-frontend` | **~75 MB** | **~74.5 MB** (lihat juga **74.52 MB** pada tangkapan layar Docker Desktop lokal) | Sudah multi-stage (Node build → Nginx); perubahan utama modul 6 ada di backend |
 
 **Kesimpulan singkat:** optimasi **multi-stage + venv** pada backend mengarah pada image runtime yang **tidak lagi membawa header pengembangan PostgreSQL** (`libpq-dev`) di layer akhir, sehingga ukuran lebih terkendali dibanding pola satu-stage dengan paket dev yang sama.
+
+### Bukti ukuran & nama image lokal (Docker Desktop)
+
+Tangkapan layar berikut dari **Docker Desktop → Images → tab Local**: memperlihatkan image hasil build Compose untuk proyek ini beserta ukuran pada mesin pengembangan.
+
+| Image (lokal) | Tag | Ukuran (contoh dari screenshot) |
+|----------------|-----|-----------------------------------|
+| `cc-kelompok-taskete_7-backend` | `latest` | **345.59 MB** |
+| `cc-kelompok-taskete_7-frontend` | `latest` | **74.52 MB** |
+| `postgres` | `16-alpine` | **395.43 MB** *(image resmi DB, bukan build tim)* |
+
+![Daftar image lokal di Docker Desktop](Screenshoots/Image-Docker-desktop.png)
+
+*Catatan: ini adalah bukti image **di komputer lokal**, bukan otomatis bukti sudah **push** ke Docker Hub. Untuk bukti di registry, gunakan screenshot **hub.docker.com** atau tab **Hub** di Docker Desktop (jika memakai akun yang sama).*
 
 ## Cara mengukur ulang (bisa dilampirkan ke laporan)
 
@@ -51,7 +65,31 @@ Ini akan menandai dan mendorong:
 
 Lihat juga `Makefile` (target `push-hub`) dan `scripts/docker.sh` (perintah `push-hub`).
 
+## Docker Hub — image aplikasi dengan tag `latest` (modul 7 / Lead CI/CD)
+
+Setelah `docker login`, push image backend dan frontend ke akun tim menggunakan **tag `latest`** (default variabel `TAG` di `Makefile`):
+
+```bash
+make push DOCKERHUB_USER=<USERNAME_DOCKER_HUB>
+```
+
+Ganti `<USERNAME_DOCKER_HUB>` dengan **username Docker Hub** tim (bukan email). Perintah di atas setara dengan menandai dan mengunggah:
+
+- `<USERNAME_DOCKER_HUB>/simcuti-backend:latest`
+- `<USERNAME_DOCKER_HUB>/simcuti-frontend:latest`
+
+**Catatan:** image database `postgres:16-alpine` diambil dari registry resmi PostgreSQL; yang di-push ke namespace tim biasanya hanya **image aplikasi** backend dan frontend hasil `docker compose build`.
+
+### Bukti repositori di Docker Hub (screenshot)
+
+Tangkapan layar repositori / tag di Docker Hub disimpan di repositori sebagai berikut (sesuaikan nama file jika berbeda):
+
+![Repositori SIMCUTI di Docker Hub (contoh)](Screenshoots/Image-Docker%20Hub.png)
+
+*Gambar: contoh tampilan Docker Hub untuk dokumentasi nama image dan tag (`latest`). Ganti placeholder pada nama repository dengan username tim yang sebenarnya.*
+
 ## Lampiran terkait
 
 - Perbandingan base image Python (`python:3.12` vs `slim` vs `alpine`): [`image-comparison.md`](image-comparison.md)
 - Arsitektur container: [`docker-architecture.md`](docker-architecture.md)
+- Screenshot image **lokal** (Docker Desktop, tab *Local*): [`Screenshoots/Image-Docker-desktop.png`](Screenshoots/Image-Docker-desktop.png)
