@@ -496,5 +496,7 @@ Pada tahap ini dilakukan pengujian awal dengan membuka aplikasi melalui browser 
 
 [Modul 3 - Dokumentasi ui test result ](docs/ui-test-results.md)
 
-[Modul 6 - Dokumentasi 	Bandingkan ukuran image](docs/image-comparison.md)
+[Modul 6 - Perbandingan base image Python](docs/image-comparison.md)
+
+[Modul 6 - Ukuran image SIMCUTI sebelum vs sesudah optimasi + push Docker Hub](docs/image-optimization-simcuti.md)
 

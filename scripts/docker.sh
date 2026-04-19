@@ -24,6 +24,8 @@ cd "$ROOT"
 
 DOCKERHUB_USER="${DOCKERHUB_USER:-}"
 TAG="${TAG:-latest}"
+BACKEND_TAG="${BACKEND_TAG:-v2}"
+FRONTEND_TAG="${FRONTEND_TAG:-v1}"
 # Default: prefix image hasil `docker compose build` = nama folder project + underscore
 COMPOSE_IMAGE_PREFIX="${COMPOSE_IMAGE_PREFIX:-cc-kelompok-taskete_7}"
 
@@ -59,6 +61,20 @@ push() {
   echo "✅ Push selesai."
 }
 
+push_hub() {
+  if [[ -z "$DOCKERHUB_USER" ]]; then
+    echo "Error: set DOCKERHUB_USER (username Docker Hub)."
+    exit 1
+  fi
+  echo "📦 Push modul 6: simcuti-backend:${BACKEND_TAG} & simcuti-frontend:${FRONTEND_TAG}"
+  docker compose build backend frontend
+  docker tag "${COMPOSE_IMAGE_PREFIX}_backend:latest" "${DOCKERHUB_USER}/simcuti-backend:${BACKEND_TAG}"
+  docker tag "${COMPOSE_IMAGE_PREFIX}_frontend:latest" "${DOCKERHUB_USER}/simcuti-frontend:${FRONTEND_TAG}"
+  docker push "${DOCKERHUB_USER}/simcuti-backend:${BACKEND_TAG}"
+  docker push "${DOCKERHUB_USER}/simcuti-frontend:${FRONTEND_TAG}"
+  echo "✅ Push selesai."
+}
+
 clean() {
   echo "⚠️  Ini akan menghapus container + volume database (data hilang)."
   read -r -p "Lanjutkan? [y/N] " confirm
@@ -77,10 +93,12 @@ SIMCUTI — scripts/docker.sh
 
   run    — docker compose up -d
   build  — docker compose up --build -d
-  push   — build, tag, push simcuti-backend & simcuti-frontend (butuh DOCKERHUB_USER)
-  clean  — docker compose down -v + prune (konfirmasi)
+  push     — build, tag, push simcuti-backend & simcuti-frontend (TAG sama; butuh DOCKERHUB_USER)
+  push-hub — modul 6: tag terpisah backend:v2 & frontend:v1 (override BACKEND_TAG / FRONTEND_TAG)
+  clean    — docker compose down -v + prune (konfirmasi)
 
 Opsional: TAG=v1 DOCKERHUB_USER=u ./scripts/docker.sh push
+Opsional: DOCKERHUB_USER=u ./scripts/docker.sh push-hub
 Opsional: COMPOSE_IMAGE_PREFIX=prefix jika 'docker images' menunjukkan prefix lain.
 EOF
 }
@@ -89,6 +107,7 @@ case "${1:-help}" in
   run)   run ;;
   build) build ;;
   push)  push ;;
+  push-hub) push_hub ;;
   clean) clean ;;
   help|-h|--help) help ;;
   *)
