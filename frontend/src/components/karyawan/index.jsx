@@ -2,6 +2,7 @@
  * SIMCUTI — Karyawan Components (White & Blue Minimalist)
  */
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { leavesAPI, holidaysAPI } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { Spinner } from '../shared';
@@ -253,14 +254,14 @@ export function HistoriCuti({ refreshKey }) {
   const canEditDelete = (item) => item.status === 'pending';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
-      <div style={{ display: 'flex', gap: '0.75rem' }}>
-        {[['', 'Semua Status'], ['pending', 'Menunggu'], ['approved', 'Disetujui'], ['rejected', 'Ditolak']].map(([v, l]) => (
-          <button key={v} onClick={() => setFilter(v)} className={`btn btn-sm ${filter === v ? 'btn-primary-purple' : 'btn-outline'}`}>{l}</button>
-        ))}
-      </div>
-      {loading ? <Spinner /> : (
-        <>
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {[['', 'Semua Status'], ['pending', 'Menunggu'], ['approved', 'Disetujui'], ['rejected', 'Ditolak']].map(([v, l]) => (
+            <button key={v} onClick={() => setFilter(v)} className={`btn btn-sm ${filter === v ? 'btn-primary-purple' : 'btn-outline'}`}>{l}</button>
+          ))}
+        </div>
+        {loading ? <Spinner /> : (
           <div className="table-container">
             <table className="table">
               <thead><tr><th>Periode Cuti</th><th>Durasi</th><th>Alasan</th><th>Status</th><th style={{ textAlign: 'center' }}>Aksi</th></tr></thead>
@@ -301,126 +302,182 @@ export function HistoriCuti({ refreshKey }) {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
 
-          {/* Edit Modal */}
-          {editingId && editForm && (
+      {/* Edit Modal - Rendered at document body level */}
+      {editingId && editForm && createPortal(
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+          overflow: 'auto'
+        }} onClick={(e) => e.target === e.currentTarget && setEditingId(null)}>
+          <div style={{ 
+            width: '100%', maxWidth: 500, padding: 0, 
+            overflow: 'hidden', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            borderRadius: '12px', background: 'white', animation: 'fadeIn 0.2s ease-out'
+          }}>
+            {/* Header */}
             <div style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 1000
+              padding: '1.5rem 2rem', borderBottom: '1px solid #e5e7eb',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
             }}>
-              <div style={{
-                background: 'white', borderRadius: 12, padding: '2rem', maxWidth: 600, width: '90%',
-                boxShadow: '0 20px 25px rgba(0, 0, 0, 0.15)'
-              }}>
-                <h2 style={{ marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Edit Pengajuan Cuti</h2>
-                <form onSubmit={handleEditSubmit}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                    <div className="form-group">
-                      <label className="form-label">Tanggal Mulai Cuti</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
-                        name="start_date"
-                        value={editForm.start_date} 
-                        onChange={handleEditChange}
-                        required 
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Tanggal Terakhir Cuti</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
-                        name="end_date"
-                        value={editForm.end_date} 
-                        onChange={handleEditChange}
-                        required 
-                      />
-                    </div>
-                  </div>
+              <h2 style={{ fontWeight: 700, fontSize: '1.125rem', color: 'white', margin: 0 }}>✏️ Edit Pengajuan Cuti</h2>
+              <button onClick={() => setEditingId(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'white', fontWeight: 300 }}>&times;</button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', maxHeight: 'calc(90vh - 160px)', overflow: 'auto' }}>
+              <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
                   <div className="form-group">
-                    <label className="form-label">Alasan Pengajuan</label>
-                    <textarea 
+                    <label className="form-label">Tanggal Mulai Cuti</label>
+                    <input 
+                      type="date" 
                       className="form-input" 
-                      placeholder="Tuliskan alasan lengkap Anda..." 
-                      name="reason"
-                      value={editForm.reason} 
+                      name="start_date"
+                      value={editForm.start_date} 
                       onChange={handleEditChange}
-                      rows={4} 
                       required 
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Nomor Kontak Darurat</label>
+                    <label className="form-label">Tanggal Terakhir Cuti</label>
                     <input 
-                      type="text" 
+                      type="date" 
                       className="form-input" 
-                      placeholder="Contoh: 0812xxxx (Nama)" 
-                      name="emergency_contact"
-                      value={editForm.emergency_contact || ''} 
+                      name="end_date"
+                      value={editForm.end_date} 
                       onChange={handleEditChange}
+                      required 
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-                    <button 
-                      type="button"
-                      className="btn btn-outline"
-                      onClick={() => { setEditingId(null); setEditForm(null); }}
-                      disabled={editLoading}
-                    >
-                      Batal
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="btn btn-primary-purple"
-                      disabled={editLoading}
-                    >
-                      {editLoading ? <Spinner size="sm" color="white" /> : 'Simpan Perubahan'}
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Delete Confirmation Modal */}
-          {showDeleteConfirm && (
-            <div style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 1000
-            }}>
-              <div style={{
-                background: 'white', borderRadius: 12, padding: '2rem', maxWidth: 400, width: '90%',
-                boxShadow: '0 20px 25px rgba(0, 0, 0, 0.15)'
-              }}>
-                <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Batalkan Pengajuan?</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                  Apakah Anda yakin ingin membatalkan pengajuan cuti ini? Tindakan ini tidak dapat dibatalkan.
-                </p>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                  <button 
-                    className="btn btn-outline"
-                    onClick={() => setShowDeleteConfirm(null)}
-                    disabled={deleteLoading}
-                  >
-                    Tidak, Batal
-                  </button>
-                  <button 
-                    className="btn btn-outline"
-                    onClick={handleDeleteConfirm}
-                    disabled={deleteLoading}
-                    style={{ borderColor: '#dc2626', color: '#dc2626' }}
-                  >
-                    {deleteLoading ? <Spinner size="sm" color="currentColor" /> : 'Ya, Hapus'}
-                  </button>
                 </div>
-              </div>
+                <div className="form-group">
+                  <label className="form-label">Alasan Pengajuan</label>
+                  <textarea 
+                    className="form-input" 
+                    placeholder="Tuliskan alasan lengkap Anda..." 
+                    name="reason"
+                    value={editForm.reason} 
+                    onChange={handleEditChange}
+                    rows={4} 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Nomor Kontak Darurat</label>
+                  <input 
+                    type="text" 
+                    className="form-input" 
+                    placeholder="Contoh: 0812xxxx (Nama)" 
+                    name="emergency_contact"
+                    value={editForm.emergency_contact || ''} 
+                    onChange={handleEditChange}
+                  />
+                </div>
+              </form>
             </div>
-          )}
-        </>
+
+            {/* Footer */}
+            <div style={{
+              padding: '1.5rem 2rem', borderTop: '1px solid #e5e7eb',
+              display: 'flex', gap: '1rem', justifyContent: 'flex-end', background: '#f9fafb'
+            }}>
+              <button 
+                type="button"
+                onClick={() => { setEditingId(null); setEditForm(null); }}
+                disabled={editLoading}
+                style={{
+                  padding: '0.625rem 1.5rem', fontSize: '0.875rem', fontWeight: 600,
+                  background: 'white', color: '#374151', border: '1px solid #d1d5db',
+                  borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                Batal
+              </button>
+              <button 
+                type="button"
+                onClick={handleEditSubmit}
+                disabled={editLoading}
+                style={{
+                  padding: '0.625rem 1.75rem', fontSize: '0.875rem', fontWeight: 600,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white',
+                  border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                {editLoading ? <Spinner size="sm" color="white" /> : '💾 Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
-    </div>
+
+      {/* Delete Confirmation Modal - Rendered at document body level */}
+      {showDeleteConfirm && createPortal(
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          background: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem',
+          overflow: 'auto'
+        }} onClick={(e) => e.target === e.currentTarget && setShowDeleteConfirm(null)}>
+          <div style={{ 
+            width: '100%', maxWidth: 420, padding: 0, 
+            overflow: 'hidden', boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            borderRadius: '12px', background: 'white', animation: 'fadeIn 0.2s ease-out'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '1.5rem 2rem', borderBottom: '1px solid #e5e7eb',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)'
+            }}>
+              <h2 style={{ fontWeight: 700, fontSize: '1.125rem', color: 'white', margin: 0 }}>⚠️ Konfirmasi Pembatalan</h2>
+              <button onClick={() => setShowDeleteConfirm(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'white', fontWeight: 300 }}>&times;</button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <p style={{ color: '#4b5563', fontSize: '0.975rem', lineHeight: 1.6, margin: 0 }}>
+                Apakah Anda yakin ingin membatalkan pengajuan cuti ini? Tindakan ini tidak dapat dibatalkan.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '1.5rem 2rem', borderTop: '1px solid #e5e7eb',
+              display: 'flex', gap: '1rem', justifyContent: 'flex-end', background: '#f9fafb'
+            }}>
+              <button 
+                onClick={() => setShowDeleteConfirm(null)}
+                disabled={deleteLoading}
+                style={{
+                  padding: '0.625rem 1.5rem', fontSize: '0.875rem', fontWeight: 600,
+                  background: 'white', color: '#374151', border: '1px solid #d1d5db',
+                  borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                Tidak, Batal
+              </button>
+              <button 
+                onClick={handleDeleteConfirm}
+                disabled={deleteLoading}
+                style={{
+                  padding: '0.625rem 1.75rem', fontSize: '0.875rem', fontWeight: 600,
+                  background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)', color: 'white',
+                  border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+              >
+                {deleteLoading ? <Spinner size="sm" color="white" /> : '🗑️ Ya, Hapus'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

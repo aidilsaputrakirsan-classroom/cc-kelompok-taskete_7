@@ -56,8 +56,7 @@ function ModalApproval({ leave, onApprove, onReject, onClose }) {
     }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="card fade-in" style={{ 
         width: '100%', maxWidth: 540, padding: 0, 
-        overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-        margin: '2rem auto' 
+        overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
       }}>
         <div style={{
           padding: '1.25rem 1.75rem', borderBottom: '1px solid var(--border-color)',
