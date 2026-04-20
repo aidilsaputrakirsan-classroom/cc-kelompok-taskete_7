@@ -14,7 +14,7 @@ from database import engine, get_db
 from models import Base
 from schemas import (
     UserCreate, UserResponse, TokenResponse, LoginRequest,
-    LeaveCreate, LeaveResponse, LeaveListResponse, LeaveApproveReject,
+    LeaveCreate, LeaveUpdate, LeaveResponse, LeaveListResponse, LeaveApproveReject,
     HolidayCreate, HolidayResponse, HolidayListResponse,
     SAWResponse, SummaryStats,
 )
@@ -285,6 +285,66 @@ def reject_leave(
             detail="Pengajuan tidak ditemukan atau sudah diproses sebelumnya.",
         )
     return leave
+
+
+@app.put(
+    "/leaves/{leave_id}",
+    response_model=LeaveResponse,
+    tags=["Pengajuan Cuti"],
+    summary="Edit Pengajuan Cuti",
+)
+def update_leave(
+    leave_id: int,
+    leave_data: LeaveUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Edit pengajuan cuti (hanya bisa dilakukan untuk pengajuan dengan status pending).
+    Karyawan hanya bisa mengedit pengajuan milik mereka sendiri.
+    
+    Sistem akan melakukan validasi yang sama saat membuat pengajuan baru:
+    - Menghitung hari kerja efektif
+    - Memvalidasi sisa kuota cuti mencukupi
+    - Menolak jika ada pengajuan pending lain yang tanggalnya tumpang tindih
+    """
+    leave = crud.update_leave_request(db=db, leave_id=leave_id, leave_data=leave_data, user=current_user)
+    if leave is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                "Edit pengajuan gagal. Kemungkinan penyebab: "
+                "(1) Pengajuan tidak ditemukan atau sudah diproses, "
+                "(2) Sisa kuota cuti tidak mencukupi, "
+                "(3) Semua hari yang dipilih adalah hari libur/weekend, "
+                "atau (4) Ada pengajuan pending lain dengan tanggal yang tumpang tindih."
+            ),
+        )
+    return leave
+
+
+@app.delete(
+    "/leaves/{leave_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Pengajuan Cuti"],
+    summary="Batalkan Pengajuan Cuti",
+)
+def delete_leave(
+    leave_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Batalkan/hapus pengajuan cuti (hanya bisa dilakukan untuk pengajuan dengan status pending).
+    Karyawan hanya bisa menghapus pengajuan milik mereka sendiri.
+    """
+    success = crud.delete_leave_request(db=db, leave_id=leave_id, user=current_user)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Pengajuan tidak ditemukan, sudah diproses, atau bukan milik Anda.",
+        )
+    return None
 
 
 # ==================== HOLIDAY ENDPOINTS ====================

@@ -123,6 +123,22 @@ export const leavesAPI = {
       return res.data;
     } catch (e) { handleError(e); }
   },
+
+  // Karyawan: edit pengajuan (hanya untuk status pending)
+  update: async (id, data) => {
+    try {
+      const res = await api.put(`/leaves/${id}`, data);
+      return res.data;
+    } catch (e) { handleError(e); }
+  },
+
+  // Karyawan: batalkan/hapus pengajuan (hanya untuk status pending)
+  delete: async (id) => {
+    try {
+      await api.delete(`/leaves/${id}`);
+      return true;
+    } catch (e) { handleError(e); }
+  },
 };
 
 // ==================== HOLIDAYS API ====================

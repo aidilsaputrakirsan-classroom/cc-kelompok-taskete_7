@@ -71,6 +71,21 @@ class LeaveCreate(BaseModel):
         return v
 
 
+class LeaveUpdate(BaseModel):
+    """Schema untuk update pengajuan cuti (hanya untuk status pending)."""
+    start_date: date
+    end_date: date
+    reason: str
+    emergency_contact: Optional[str] = None
+
+    @field_validator("end_date")
+    @classmethod
+    def end_after_start(cls, v, info):
+        if "start_date" in info.data and v < info.data["start_date"]:
+            raise ValueError("Tanggal selesai harus setelah tanggal mulai.")
+        return v
+
+
 class LeaveApproveReject(BaseModel):
     rejection_note: Optional[str] = None
 

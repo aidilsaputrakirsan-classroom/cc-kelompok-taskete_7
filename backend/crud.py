@@ -238,6 +238,80 @@ def reject_leave(
     return leave
 
 
+def update_leave_request(
+    db: Session,
+    leave_id: int,
+    leave_data,
+    user: User,
+) -> Optional[LeaveRequest]:
+    """
+    Update pengajuan cuti (hanya untuk status pending).
+    User hanya bisa update pengajuan milik mereka sendiri.
+    Validasi: sisa kuota mencukupi, tidak ada pengajuan pending yang overlapping.
+    """
+    leave = get_leave_by_id(db, leave_id)
+    if not leave or leave.status != "pending" or leave.user_id != user.id:
+        return None
+
+    # Hitung hari kerja efektif untuk tanggal baru
+    working_days = count_working_days(leave_data.start_date, leave_data.end_date, db)
+    if working_days == 0:
+        return None  # Semua hari adalah libur/weekend
+
+    # Cek sisa kuota (dengan memperhitungkan selisih hari dengan pengajuan lama)
+    used = get_used_leave_days(user.id, db)
+    # Kurangi pengajuan lama dari perhitungan used days karena masih pending
+    # (baru akan dikurangi kuota setelah approved)
+    remaining = user.annual_leave_quota - used
+    days_difference = working_days - leave.working_days
+    
+    if days_difference > remaining:
+        return None  # Kuota tidak cukup untuk selisih hari
+
+    # Cek apakah ada pengajuan pending lain yang overlapping
+    overlap = db.query(LeaveRequest).filter(
+        LeaveRequest.user_id == user.id,
+        LeaveRequest.id != leave_id,  # Exclude pengajuan yang sedang di-update
+        LeaveRequest.status == "pending",
+        or_(
+            and_(LeaveRequest.start_date <= leave_data.start_date, LeaveRequest.end_date >= leave_data.start_date),
+            and_(LeaveRequest.start_date <= leave_data.end_date, LeaveRequest.end_date >= leave_data.end_date),
+            and_(LeaveRequest.start_date >= leave_data.start_date, LeaveRequest.end_date <= leave_data.end_date),
+        )
+    ).first()
+    if overlap:
+        return None  # Ada overlap dengan pengajuan pending lain
+
+    # Update data
+    leave.start_date = leave_data.start_date
+    leave.end_date = leave_data.end_date
+    leave.working_days = working_days
+    leave.reason = leave_data.reason
+    leave.emergency_contact = leave_data.emergency_contact
+    
+    db.commit()
+    db.refresh(leave)
+    return leave
+
+
+def delete_leave_request(
+    db: Session,
+    leave_id: int,
+    user: User,
+) -> bool:
+    """
+    Hapus pengajuan cuti (hanya untuk status pending).
+    User hanya bisa delete pengajuan milik mereka sendiri.
+    """
+    leave = get_leave_by_id(db, leave_id)
+    if not leave or leave.status != "pending" or leave.user_id != user.id:
+        return False
+    
+    db.delete(leave)
+    db.commit()
+    return True
+
+
 # ==================== HOLIDAY CRUD ====================
 
 def get_holidays(db: Session) -> List[Holiday]:
