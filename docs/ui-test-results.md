@@ -16,7 +16,7 @@ Hasil testing menunjukkan daftar item yang berasal dari database sebelumnya berh
    
 ![alt text](image.png)
 
-Pengujian dilakukan dengan mengisi form penambahan item dan menekan tombol tambah item. Sistem berhasil memproses data yang dimasukkan tanpa error.
+Pengujian dilakukan dengan m engisi form penambahan item dan menekan tombol tambah item. Sistem berhasil memproses data yang dimasukkan tanpa error.
 
 ### 4. Item muncul pada daftar ✅
 
@@ -65,3 +65,13 @@ Setelah penghapusan dikonfirmasi, item yang dipilih berhasil dihapus dari daftar
 ![alt text](<Screenshot 2026-03-13 003353.png>)
 
 Setelah seluruh item pada daftar dihapus, halaman aplikasi menampilkan tampilan empty state yang menunjukkan bahwa tidak ada item yang tersedia di daftar. 
+
+
+| Kode Testing | Skenario Pengujian        | Langkah Pengujian                          | Hasil yang Diharapkan              | Status | Bukti |
+|--------------|--------------------------|--------------------------------------------|------------------------------------|--------|-------|
+| TC-01        | Login berhasil           | Input username & password valid            | Berhasil masuk ke dashboard        | ✅     | ![Bukti](ui_test_result/kry1.png) |
+| TC-02        | Melakukan login terlebih dahulu | Masuk ke halaman dashboard SIMCUTI       | Tampilan dashboard                 | ✅     | ![Bukti](ui_test_result/kry2.png) |
+| TC-03        | Create items pengajuan cuti | Kirim Pengajuan Cuti             | Muncul notifikasi pengajuan cuti berhasi      | ✅ | ![Bukti](ui_test_result/kry6.png)| 
+| TC-04        | Melihat data pengajuan cuti yang sudah berhasil dibuat | Kirim Pengajuan Cuti             | Masuk ke halaman histori dan terdapat items yang sudah dibuat      | ✅ | ![Bukti](ui_test_result/kry8.png)| 
+| TC-04        | Melihat data pengajuan cuti yang apakah approved atau ditolak | Masuk ke dalam histori saya             | Masuk ke halaman histori dan terdapat items yang sudah dibuat      | ✅ | ![Bukti](ui_test_result/kry11.png)| 
+

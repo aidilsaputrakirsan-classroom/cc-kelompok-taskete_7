@@ -10,7 +10,7 @@ Nama Aplikasi: SIMCUTI - Sistem Manajemen Cuti Karyawan
 
 
 ### ⏱️ Menit 0–1 — Menjalankan Aplikasi (DevOps)
-    - 
+
 
  “Pada awal demo, kami menjalankan seluruh sistem menggunakan Docker Compose.”
 
@@ -66,7 +66,7 @@ Buka :
     ```
 
 
-### ⏱️ Menit 7–8 — Uji Penyimpanan Data (DevOps)
+### ⏱️ Menit 7–8 — Uji Penyimpanan Data (DevOps) 
 
 Jalan kan :   
 
