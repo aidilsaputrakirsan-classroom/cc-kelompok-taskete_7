@@ -1,0 +1,23 @@
+# =============================================
+# CODEOWNERS — cc-kelompok-taskete_7
+# =============================================
+# Ganti handle GitHub di bawah dengan username asli tim.
+
+# Default owner (fallback)
+*                           @RayhanIIqbal13
+
+# Backend — Lead Backend
+/backend/                   @Noviansyahhh
+
+# Frontend — Lead Frontend
+/frontend/                  @Irwannnnn
+
+# Docker & Infrastructure — Lead DevOps
+/docker-compose.yml         @RayhanIIqbal13
+/backend/Dockerfile         @RayhanIIqbal13
+/frontend/Dockerfile        @RayhanIIqbal13
+/Makefile                   @RayhanIIqbal13
+
+# Documentation — Lead QA & Docs
+/README.md                  @10231012tiara
+/docs/                      @10231012tiara
