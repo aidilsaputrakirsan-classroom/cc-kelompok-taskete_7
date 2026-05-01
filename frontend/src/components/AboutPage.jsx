@@ -45,24 +45,28 @@ const TECH_STACK = [
   {
     category: 'Frontend',
     icon: '⚛️',
+    items: ['React 18', 'Vite', 'Vanilla CSS'],
     color: '#2563eb',
     description: 'Single Page Application dengan React & Vite untuk pengalaman pengguna yang cepat dan responsif.',
   },
   {
     category: 'Backend',
     icon: '⚡',
+    items: ['FastAPI', 'Python 3', 'SQLAlchemy'],
     color: '#059669',
     description: 'REST API berkinerja tinggi dengan FastAPI, dilengkapi ORM SQLAlchemy untuk manajemen data.',
   },
   {
     category: 'Database',
     icon: '🗄️',
+    items: ['PostgreSQL', 'Alembic Migrations'],
     color: '#7c3aed',
     description: 'Database relasional PostgreSQL dengan migrasi schema menggunakan Alembic.',
   },
   {
     category: 'DevOps',
     icon: '🐳',
+    items: ['Docker', 'Docker Compose', 'GitHub Actions'],
     color: '#0891b2',
     description: 'Containerisasi penuh dengan Docker & orkestrasi via Docker Compose. CI/CD dengan GitHub Actions.',
   },
