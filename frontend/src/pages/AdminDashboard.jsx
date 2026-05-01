@@ -15,7 +15,7 @@ const MENUS = [
   { id: 'saw', label: 'Rekomendasi SAW', icon: '🏆' },
 ];
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onShowAbout }) {
   const { user, logout } = useAuth();
   const { toast, show, close } = useToast();
   const [activeMenu, setActiveMenu] = useState('ringkasan');
@@ -92,8 +92,13 @@ export default function AdminDashboard() {
           ))}
         </nav>
 
-        {/* Logout */}
-        <div style={{ padding: '1.5rem', borderTop: '1px solid #f8fafc' }}>
+        {/* About & Logout */}
+        <div style={{ padding: '1.5rem', borderTop: '1px solid #f8fafc', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {onShowAbout && (
+            <button onClick={onShowAbout} className="btn btn-outline" style={{ width: '100%' }} id="admin-about-btn">
+              ℹ️ Tentang Proyek
+            </button>
+          )}
           <button onClick={logout} className="btn btn-outline" style={{ width: '100%', border: '1px solid #fee2e2', color: '#b91c1c' }}>
             Logout
           </button>

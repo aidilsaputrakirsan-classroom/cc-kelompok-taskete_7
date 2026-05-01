@@ -1,15 +1,18 @@
 /**
  * SIMCUTI — App Router
  */
+import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import KaryawanDashboard from './pages/KaryawanDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AboutPage from './components/AboutPage';
 import { Spinner } from './components/shared';
 import './App.css';
 
 export default function App() {
   const { user, loading } = useAuth();
+  const [showAbout, setShowAbout] = useState(false);
 
   if (loading) {
     return (
@@ -27,8 +30,10 @@ export default function App() {
     );
   }
 
-  if (!user) return <LoginPage />;
+  if (showAbout) return <AboutPage onBack={() => setShowAbout(false)} />;
 
-  if (user.role === 'admin') return <AdminDashboard />;
-  return <KaryawanDashboard />;
+  if (!user) return <LoginPage onShowAbout={() => setShowAbout(true)} />;
+
+  if (user.role === 'admin') return <AdminDashboard onShowAbout={() => setShowAbout(true)} />;
+  return <KaryawanDashboard onShowAbout={() => setShowAbout(true)} />;
 }

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast, Toast, Spinner } from '../components/shared';
 
-export default function LoginPage() {
+export default function LoginPage({ onShowAbout }) {
   const { login, register } = useAuth();
   const { toast, show, close } = useToast();
   const [tab, setTab] = useState('login');
@@ -221,6 +221,26 @@ export default function LoginPage() {
         <p style={{ color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.25rem' }}>
           Cloud Computing SI ITK
         </p>
+        {onShowAbout && (
+          <button
+            onClick={onShowAbout}
+            id="login-about-link"
+            style={{
+              marginTop: '1rem',
+              background: 'none',
+              border: '1px solid var(--border-color)',
+              color: 'var(--primary)',
+              padding: '0.5rem 1.25rem',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontSize: '0.8125rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+            }}
+          >
+            ℹ️ Tentang Proyek Ini
+          </button>
+        )}
       </div>
 
       {toast && <Toast message={toast.message} type={toast.type} onClose={close} />}
