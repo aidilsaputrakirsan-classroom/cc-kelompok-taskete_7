@@ -50,7 +50,7 @@ const TECH_STACK = [
   },
   {
     category: 'Backend',
-    icon: '⚡', y'],
+    icon: '⚡',
     color: '#059669',
     description: 'REST API berkinerja tinggi dengan FastAPI, dilengkapi ORM SQLAlchemy untuk manajemen data.',
   },
