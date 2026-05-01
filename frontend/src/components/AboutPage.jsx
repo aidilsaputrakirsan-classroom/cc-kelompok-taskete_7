@@ -8,38 +8,34 @@ import { useState } from 'react';
 
 const TEAM = [
   {
-    name: 'Rayhan Iqbal',
-    nim: '10231xxx',
-    role: 'Lead DevOps',
-    github: 'RayhanIIqbal13',
-    focus: 'Docker, Infrastructure, CI/CD pipeline',
-    emoji: '⚙️',
-    color: '#7c3aed',
-  },
-  {
     name: 'Noviansyah',
-    nim: '10231xxx',
+    nim: '10231072',
     role: 'Lead Backend',
     github: 'Noviansyahhh',
-    focus: 'FastAPI, PostgreSQL, Auth & CRUD',
     emoji: '🛠️',
     color: '#0891b2',
   },
   {
-    name: 'Irwan',
-    nim: '10231xxx',
+    name: 'Irwan Maulana',
+    nim: '10231046',
     role: 'Lead Frontend',
     github: 'Irwannnnn',
-    focus: 'React, Vite, UI/UX Design',
     emoji: '🎨',
     color: '#2563eb',
   },
   {
-    name: 'Tiara',
+    name: 'Rayhan Iqbal',
+    nim: '10231080',
+    role: 'Lead DevOps',
+    github: 'RayhanIIqbal13',
+    emoji: '⚙️',
+    color: '#eab308',
+  },
+  {
+    name: 'Amalia Tiara Rezfani',
     nim: '10231012',
     role: 'Lead QA & Docs',
     github: '10231012tiara',
-    focus: 'Testing, Dokumentasi, Quality Assurance',
     emoji: '📝',
     color: '#16a34a',
   },
@@ -49,28 +45,24 @@ const TECH_STACK = [
   {
     category: 'Frontend',
     icon: '⚛️',
-    items: ['React 18', 'Vite', 'Vanilla CSS'],
     color: '#2563eb',
     description: 'Single Page Application dengan React & Vite untuk pengalaman pengguna yang cepat dan responsif.',
   },
   {
     category: 'Backend',
-    icon: '⚡',
-    items: ['FastAPI', 'Python 3', 'SQLAlchemy'],
+    icon: '⚡', y'],
     color: '#059669',
     description: 'REST API berkinerja tinggi dengan FastAPI, dilengkapi ORM SQLAlchemy untuk manajemen data.',
   },
   {
     category: 'Database',
     icon: '🗄️',
-    items: ['PostgreSQL', 'Alembic Migrations'],
     color: '#7c3aed',
     description: 'Database relasional PostgreSQL dengan migrasi schema menggunakan Alembic.',
   },
   {
     category: 'DevOps',
     icon: '🐳',
-    items: ['Docker', 'Docker Compose', 'GitHub Actions'],
     color: '#0891b2',
     description: 'Containerisasi penuh dengan Docker & orkestrasi via Docker Compose. CI/CD dengan GitHub Actions.',
   },
@@ -302,7 +294,7 @@ function TimelineSection() {
               <div style={{
                 ...styles.timelineDot,
                 backgroundColor: m.status === 'done' ? '#16a34a' :
-                                  m.status === 'current' ? 'var(--primary)' : '#cbd5e1',
+                  m.status === 'current' ? 'var(--primary)' : '#cbd5e1',
                 boxShadow: m.status === 'current' ? '0 0 0 4px var(--primary-light)' : 'none',
               }} />
               {i < MILESTONES.length - 1 && (
@@ -331,12 +323,12 @@ function TimelineSection() {
                   padding: '0.2rem 0.5rem',
                   borderRadius: 4,
                   backgroundColor: m.status === 'done' ? '#f0fdf4' :
-                                    m.status === 'current' ? 'var(--primary-light)' : '#f8fafc',
+                    m.status === 'current' ? 'var(--primary-light)' : '#f8fafc',
                   color: m.status === 'done' ? '#16a34a' :
-                          m.status === 'current' ? 'var(--primary)' : 'var(--text-muted)',
+                    m.status === 'current' ? 'var(--primary)' : 'var(--text-muted)',
                 }}>
                   {m.status === 'done' ? '✅ Selesai' :
-                   m.status === 'current' ? '🔵 Sedang Berjalan' : '⏳ Akan Datang'}
+                    m.status === 'current' ? '🔵 Sedang Berjalan' : '⏳ Akan Datang'}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.weeks}</span>
               </div>
