@@ -8,7 +8,9 @@ from typing import List, Optional
 from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session  
+from fastapi.responses import JSONResponse 
+from sqlalchemy import text                
 
 from database import engine, get_db
 from models import Base
@@ -62,19 +64,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ==================== SYSTEM ENDPOINTS ====================
 
 @app.get("/health", tags=["System"], summary="Health Check")
-def health_check():
-    """Cek status server dan API."""
-    return {
+def health_check(db: Session = Depends(get_db)):
+    """Cek status server, API, dan Database SIMCUTI."""
+    health = {
         "status": "healthy",
         "app": "SIMCUTI",
         "version": "1.0.0",
-        "description": "Sistem Informasi Manajemen Cuti Karyawan",
+        "database": "connected"
     }
-
+    
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        health["status"] = "unhealthy"
+        health["database"] = f"error: {str(e)}"
+    
+    status_code = 200 if health["status"] == "healthy" else 503
+    return JSONResponse(content=health, status_code=status_code)
 
 @app.get("/team", tags=["System"], summary="Info Tim Pengembang")
 def team_info():
