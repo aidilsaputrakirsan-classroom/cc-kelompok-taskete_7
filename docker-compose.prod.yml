@@ -1,0 +1,21 @@
+# ============================================================
+# SIMCUTI — Docker Compose Production Overrides
+# Gunakan bersama file utama:
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d
+# ============================================================
+
+services:
+  backend:
+    environment:
+      DEBUG: "false"
+      # Sesuaikan origin production jika nanti deploy frontend ke domain publik.
+      CORS_ORIGINS: "http://localhost:3000"
+    restart: always
+
+  frontend:
+    restart: always
+
+  db:
+    restart: always
+    # Di mode prod, port database tidak diexpose ke host.
+    ports: []

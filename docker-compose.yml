@@ -6,6 +6,8 @@
 # USAGE:
 #   docker compose up -d             # Start semua services (background)
 #   docker compose up --build -d     # Rebuild + start
+#   docker compose --profile dev up -d --build   # Jalankan mode development
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile prod up -d   # Jalankan mode production-like
 #   docker compose down               # Stop & remove containers
 #   docker compose down -v            # Stop & hapus volumes (⚠️ data hilang!)
 #   docker compose logs -f            # Lihat logs real-time
@@ -38,6 +40,9 @@ services:
       timeout: 5s # Maksimal tunggu 5 detik tiap pengecekan
       retries: 5 # Gagal 5 kali baru dianggap unhealthy
       start_period: 15s # Tunggu 15 detik sebelum healthcheck dimulai
+    # Profil:
+    # - dev  : akses DB dari host tetap dibuka (lihat ports)
+    # - prod : override ada di docker-compose.prod.yml
 
   # =====================================================
   # BACKEND — FastAPI + Uvicorn
@@ -73,6 +78,9 @@ services:
         python seed.py &&
         wait
       "
+    # Profil:
+    # - dev  : config default dari file ini
+    # - prod : env/restart bisa dioverride lewat docker-compose.prod.yml
 
   # =====================================================
   # FRONTEND — React + Nginx (Multi-Stage Build)
@@ -94,6 +102,9 @@ services:
       - simcuti-net # Frontend terhubung ke network internal
     depends_on:
       - backend # Frontend dijalankan setelah backend
+    # Profil:
+    # - dev  : VITE_API_URL default (localhost:8000)
+    # - prod : override restart/policy lewat docker-compose.prod.yml
 
 # =====================================================
 # VOLUMES — Named volume untuk data persistence
