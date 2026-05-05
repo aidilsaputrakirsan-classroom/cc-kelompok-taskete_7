@@ -7,10 +7,10 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 
-from models import User, LeaveRequest, Holiday
+from models import User, LeaveRequest, Holiday, Item
 from schemas import (
     UserCreate, LeaveCreate, LeaveApproveReject,
-    HolidayCreate, KaryawanSAWData, SAWResponse
+    HolidayCreate, KaryawanSAWData, SAWResponse, ItemCreate, ItemUpdate
 )
 from auth import hash_password, verify_password
 
@@ -507,3 +507,62 @@ def calculate_saw(db: Session) -> SAWResponse:
         item.rank = i + 1
 
     return SAWResponse(bobot=BOBOT, data=result_data)
+
+
+# ==================== ITEM CRUD ====================
+
+def create_item(db: Session, item_data: ItemCreate, user_id: int) -> Item:
+    """Create a new item."""
+    db_item = Item(
+        name=item_data.name,
+        description=item_data.description,
+        price=item_data.price,
+        quantity=item_data.quantity,
+        created_by=user_id
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def get_items(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None):
+    """Get all items with optional search filter."""
+    query = db.query(Item)
+    if search:
+        query = query.filter(Item.name.ilike(f"%{search}%"))
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    return {"total": total, "items": items}
+
+
+def get_item_by_id(db: Session, item_id: int) -> Optional[Item]:
+    """Get item by ID."""
+    return db.query(Item).filter(Item.id == item_id).first()
+
+
+def update_item(db: Session, item_id: int, item_data: ItemUpdate) -> Optional[Item]:
+    """Update an item."""
+    db_item = get_item_by_id(db, item_id)
+    if not db_item:
+        return None
+    
+    update_data = item_data.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_item, key, value)
+    
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+
+def delete_item(db: Session, item_id: int) -> bool:
+    """Delete an item."""
+    db_item = get_item_by_id(db, item_id)
+    if not db_item:
+        return False
+    
+    db.delete(db_item)
+    db.commit()
+    return True

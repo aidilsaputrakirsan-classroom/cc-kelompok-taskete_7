@@ -172,3 +172,38 @@ class SummaryStats(BaseModel):
     approved_count: int
     rejected_count: int
     total_hari_cuti_approved: int
+
+
+# ===================== ITEM SCHEMAS =====================
+
+class ItemCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    quantity: int
+
+
+class ItemUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    quantity: Optional[int] = None
+
+
+class ItemResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    price: float
+    quantity: int
+    created_by: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ItemListResponse(BaseModel):
+    total: int
+    items: List[ItemResponse]
