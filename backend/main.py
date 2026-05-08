@@ -19,15 +19,13 @@ from schemas import (
     LeaveCreate, LeaveUpdate, LeaveResponse, LeaveListResponse, LeaveApproveReject,
     HolidayCreate, HolidayResponse, HolidayListResponse,
     SAWResponse, SummaryStats,
+    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse,
 )
 from auth import create_access_token, get_current_user, require_admin
 from models import User
 import crud
 
 load_dotenv()
-
-# ==================== INISIALISASI DB TABLES ====================
-Base.metadata.create_all(bind=engine)
 
 # ==================== FASTAPI APP ====================
 app = FastAPI(
@@ -64,6 +62,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ==================== STARTUP EVENT ====================
+@app.on_event("startup")
+def startup_event():
+    """Create database tables on startup."""
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Warning: Could not create tables on startup: {e}")
+        # Don't fail startup if database is not available (useful for testing)
+
 # ==================== SYSTEM ENDPOINTS ====================
 
 @app.get("/health", tags=["System"], summary="Health Check")
@@ -71,6 +79,7 @@ def health_check(db: Session = Depends(get_db)):
     """Cek status server, API, dan Database SIMCUTI."""
     health = {
         "status": "healthy",
+        "service": "backend",
         "app": "SIMCUTI",
         "version": "1.0.0",
         "database": "connected"
@@ -449,3 +458,94 @@ def get_summary(
 ):
     """**Admin only.** Statistik ringkasan pengajuan cuti seluruh perusahaan."""
     return crud.get_summary_stats(db=db)
+
+
+# ==================== ITEM ENDPOINTS ====================
+
+@app.post(
+    "/items",
+    response_model=ItemResponse,
+    status_code=status.HTTP_201_CREATED,
+    tags=["Items"],
+    summary="Buat Item Baru",
+)
+def create_item(
+    item_data: ItemCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Create a new item."""
+    item = crud.create_item(db=db, item_data=item_data, user_id=current_user.id)
+    return item
+
+
+@app.get(
+    "/items",
+    response_model=ItemListResponse,
+    tags=["Items"],
+    summary="Daftar Items",
+)
+def get_items(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    search: Optional[str] = Query(None),
+):
+    """Get list of items."""
+    return crud.get_items(db=db, skip=skip, limit=limit, search=search)
+
+
+@app.get(
+    "/items/{item_id}",
+    response_model=ItemResponse,
+    tags=["Items"],
+    summary="Detail Item",
+)
+def get_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get item by ID."""
+    item = crud.get_item_by_id(db=db, item_id=item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan.")
+    return item
+
+
+@app.put(
+    "/items/{item_id}",
+    response_model=ItemResponse,
+    tags=["Items"],
+    summary="Update Item",
+)
+def update_item(
+    item_id: int,
+    item_data: ItemUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Update an item."""
+    item = crud.update_item(db=db, item_id=item_id, item_data=item_data)
+    if not item:
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan.")
+    return item
+
+
+@app.delete(
+    "/items/{item_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Items"],
+    summary="Hapus Item",
+)
+def delete_item(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Delete an item."""
+    success = crud.delete_item(db=db, item_id=item_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan.")
+    return None
