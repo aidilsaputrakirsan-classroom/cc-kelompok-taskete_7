@@ -207,3 +207,11 @@ class ItemResponse(BaseModel):
 class ItemListResponse(BaseModel):
     total: int
     items: List[ItemResponse]
+
+
+class ItemStatsResponse(BaseModel):
+    total_items: int
+    total_value: float
+    avg_price: float
+    total_quantity: int
+    avg_quantity: float
