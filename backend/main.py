@@ -19,7 +19,7 @@ from schemas import (
     LeaveCreate, LeaveUpdate, LeaveResponse, LeaveListResponse, LeaveApproveReject,
     HolidayCreate, HolidayResponse, HolidayListResponse,
     SAWResponse, SummaryStats,
-    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse,
+    ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse,
 )
 from auth import create_access_token, get_current_user, require_admin
 from models import User
@@ -494,6 +494,21 @@ def get_items(
 ):
     """Get list of items."""
     return crud.get_items(db=db, skip=skip, limit=limit, search=search)
+
+
+@app.get(
+    "/items/stats",
+    response_model=ItemStatsResponse,
+    tags=["Items"],
+    summary="Statistik Items",
+)
+def get_items_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get statistics for all items."""
+    stats = crud.get_items_stats(db=db)
+    return stats
 
 
 @app.get(
