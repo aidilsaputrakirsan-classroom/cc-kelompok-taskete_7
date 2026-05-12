@@ -566,3 +566,31 @@ def delete_item(db: Session, item_id: int) -> bool:
     db.delete(db_item)
     db.commit()
     return True
+
+
+def get_items_stats(db: Session) -> dict:
+    """Get statistics for all items."""
+    items = db.query(Item).all()
+    
+    if not items:
+        return {
+            "total_items": 0,
+            "total_value": 0.0,
+            "avg_price": 0.0,
+            "total_quantity": 0,
+            "avg_quantity": 0.0,
+        }
+    
+    total_items = len(items)
+    total_value = sum(item.price * item.quantity for item in items)
+    avg_price = sum(item.price for item in items) / total_items
+    total_quantity = sum(item.quantity for item in items)
+    avg_quantity = total_quantity / total_items if total_items > 0 else 0.0
+    
+    return {
+        "total_items": total_items,
+        "total_value": total_value,
+        "avg_price": avg_price,
+        "total_quantity": total_quantity,
+        "avg_quantity": avg_quantity,
+    }
