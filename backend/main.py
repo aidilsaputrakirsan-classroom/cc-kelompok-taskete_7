@@ -27,8 +27,12 @@ import crud
 
 load_dotenv()
 
+# DeployCC/nginx: API publik di /api/* — set ROOT_PATH=/api di production (.env server)
+_ROOT_PATH = os.getenv("ROOT_PATH", "").strip()
+
 # ==================== FASTAPI APP ====================
 app = FastAPI(
+    root_path=_ROOT_PATH or None,
     title="SIMCUTI API",
     description="""
 ## 🏢 SIMCUTI — Sistem Informasi Manajemen Cuti Karyawan
