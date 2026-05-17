@@ -27,8 +27,10 @@ import crud
 
 load_dotenv()
 
-# DeployCC/nginx: API publik di /api/* — set ROOT_PATH=/api di production (.env server)
+# DeployCC/nginx: API publik di /api/* — Swagger butuh root_path agar schema = /api/openapi.json
 _ROOT_PATH = os.getenv("ROOT_PATH", "").strip()
+if not _ROOT_PATH and os.getenv("ENVIRONMENT", "").lower() == "production":
+    _ROOT_PATH = "/api"
 
 # ==================== FASTAPI APP ====================
 app = FastAPI(
