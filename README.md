@@ -538,7 +538,55 @@ Pada tahap ini dilakukan pengujian awal dengan membuka aplikasi melalui browser 
 | 9  | DELETE | ```/items/{item_id}``` | Protected        |  Menghapus data item dari database berdasarkan ID yang dipilih       |
 | 10  | GET   | ```/team ```            | Public        | Mengambil informasi data tim pengembang yang ditampilkan pada aplikasi |
 
+## 👨‍💻 Alur Kerja Developer
 
+Mulai modul 9, proses pengembangan proyek menggunakan metode GitHub Flow. Setiap anggota tim diwajibkan melakukan pengecekan kode secara lokal menggunakan `Makefile` sebelum melakukan push ke branch fitur masing-masing.
+
+### ⚙️ Daftar Perintah Makefile
+
+Berikut beberapa perintah yang digunakan selama proses development:
+
+- `make lint`  
+  Digunakan untuk menjalankan proses linting menggunakan flake8 guna memastikan penulisan kode backend tetap rapi dan sesuai standar.
+
+- `make test`  
+  Digunakan untuk menjalankan unit testing pada project.
+
+- `make pr-check`  
+  Perintah wajib sebelum melakukan push kode. Command ini akan melakukan build ulang Docker container sekaligus menjalankan linting dan testing secara otomatis.
+
+---
+
+## 🔄 Tahapan Kontribusi
+
+1. Pindah ke branch `main` dan ambil update terbaru repository:
+   ```bash
+   git checkout main
+   git pull origin main
+
+
+## 🌐 Live Demo
+
+| Service | URL |
+|---------|-----|
+| Frontend| https://cc-kelompok-taskete7.akhzafachrozy.my.id/|
+| Backend API | https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/health |
+| API Docs (Swagger) |https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/docs |
+
+## 🔄 CI/CD
+
+![CI](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-taskete_7/actions/workflows/ci.yml/badge.svg)
+
+Pipeline otomatis berjalan saat push ke main:
+1. ✅ Test backend (pytest)
+2. ✅ Test frontend (Vitest)
+3. ✅ Build Docker images
+4. 🚀 Deploy ke Railway
+
+
+
+
+## Dokumentasi
 [Modul 2 - Dokumentasi pengujian seluruh endpoint API menggunakan Swagger ](docs/api-test-results.md)
 
 [Modul 3 - Dokumentasi ui test result ](docs/ui-test-results.md)
