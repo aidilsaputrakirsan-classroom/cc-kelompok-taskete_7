@@ -32,6 +32,7 @@ load_dotenv()
 _ROOT_PATH = os.getenv("ROOT_PATH", "").strip()
 if not _ROOT_PATH and os.getenv("ENVIRONMENT", "").lower() == "production":
     _ROOT_PATH = "/api"
+fix/update-main-config
 
 
 def _browser_openapi_url() -> str:
@@ -39,6 +40,8 @@ def _browser_openapi_url() -> str:
     prefix = _ROOT_PATH.rstrip("/")
     return f"{prefix}/openapi.json" if prefix else "/openapi.json"
 
+
+main
 
 # ==================== FASTAPI APP ====================
 app = FastAPI(
