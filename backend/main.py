@@ -9,8 +9,9 @@ from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session  
-from fastapi.responses import JSONResponse 
-from sqlalchemy import text                
+from fastapi.responses import JSONResponse
+from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
+from sqlalchemy import text
 
 from database import engine, get_db
 from models import Base
@@ -32,9 +33,18 @@ _ROOT_PATH = os.getenv("ROOT_PATH", "").strip()
 if not _ROOT_PATH and os.getenv("ENVIRONMENT", "").lower() == "production":
     _ROOT_PATH = "/api"
 
+
+def _browser_openapi_url() -> str:
+    """URL OpenAPI yang dilihat browser (DeployCC: /api/openapi.json, lokal: /openapi.json)."""
+    prefix = _ROOT_PATH.rstrip("/")
+    return f"{prefix}/openapi.json" if prefix else "/openapi.json"
+
+
 # ==================== FASTAPI APP ====================
 app = FastAPI(
     root_path=_ROOT_PATH or None,
+    docs_url=None,
+    redoc_url=None,
     title="SIMCUTI API",
     description="""
 ## 🏢 SIMCUTI — Sistem Informasi Manajemen Cuti Karyawan
@@ -67,6 +77,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui():
+    return get_swagger_ui_html(
+        openapi_url=_browser_openapi_url(),
+        title=f"{app.title} — Swagger UI",
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_ui():
+    return get_redoc_html(
+        openapi_url=_browser_openapi_url(),
+        title=f"{app.title} — ReDoc",
+    )
+
 
 # ==================== STARTUP EVENT ====================
 @app.on_event("startup")
