@@ -581,7 +581,7 @@ Pipeline otomatis berjalan saat push ke main:
 1. ✅ Test backend (pytest)
 2. ✅ Test frontend (Vitest)
 3. ✅ Build Docker images
-4. 🚀 Deploy ke Railway
+4. 🚀 Deploy ke Deploy SI
 
 
 

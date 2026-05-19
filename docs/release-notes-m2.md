@@ -38,7 +38,7 @@ Aplikasi SIMCUTI telah berhasil di-deploy ke environment production sehingga dap
 | Database | PostgreSQL |
 | Containerization | Docker & Docker Compose |
 | CI/CD | GitHub Actions |
-| Deployment | Railway |
+| Deployment | Deploy SI |
 | Testing Backend | pytest |
 | Testing Frontend | Vitest |
 
@@ -51,7 +51,7 @@ Tahapan yang terdapat pada pipeline meliputi:
 - Pengujian backend menggunakan pytest.
 - Pengujian frontend menggunakan Vitest.
 - Proses build Docker image.
-- Deployment aplikasi ke Railway.
+- Deployment aplikasi ke Deploy SI.
 - Validasi aplikasi production melalui smoke testing.
 
 ## 5. Known Issues
