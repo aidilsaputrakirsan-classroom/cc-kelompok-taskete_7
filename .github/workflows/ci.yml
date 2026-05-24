@@ -1,18 +1,16 @@
 # ==============================================
-# CI Pipeline — cc-kelompok-taskete_7
+# CI Pipeline — cc-kelompok-taskete_7 (Microservices)
 # ==============================================
 # Pipeline ini berjalan otomatis saat:
 # - Push ke branch main
 # - Pull Request ke branch main
 #
 # Jobs:
-# 1. test-backend: Install deps + run pytest
-# 2. test-frontend: Install deps + run vitest
-# 3. build-docker: Build Docker images (validasi Dockerfile)
-#
-# Catatan:
-# - Backend butuh DATABASE_URL saat import app, jadi diset SQLite untuk CI.
-# - Frontend tests saat ini stabil di Node 20 pada GitHub Actions.
+# 1. test-auth-service: pytest Auth Service
+# 2. test-item-service: pytest Item Service (cuti)
+# 3. test-backend: pytest monolith legacy (DeployCC)
+# 4. test-frontend: vitest + build
+# 5. build-docker: Build image per service
 
 name: CI Pipeline
 
@@ -22,12 +20,96 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # ================================
-  # JOB 1: Test Backend (Python/FastAPI)
+  # JOB 1: Test Auth Service
+  # ================================
+  test-auth-service:
+    name: "🔐 Test Auth Service"
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./test.db
+      SECRET_KEY: ci-test-secret-key
+
+    defaults:
+      run:
+        working-directory: ./services/auth-service
+
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "📦 Cache pip (auth-service)"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-auth-${{ hashFiles('services/auth-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-auth-
+
+      - name: "📥 Install dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx
+
+      - name: "🧪 Run Auth Service tests"
+        run: pytest
+
+  # ================================
+  # JOB 2: Test Item Service
+  # ================================
+  test-item-service:
+    name: "📦 Test Item Service"
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: sqlite:///./test.db
+      AUTH_SERVICE_URL: http://localhost:8001
+
+    defaults:
+      run:
+        working-directory: ./services/item-service
+
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "📦 Cache pip (item-service)"
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-item-${{ hashFiles('services/item-service/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-item-
+
+      - name: "📥 Install dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: "🧪 Run Item Service tests"
+        run: pytest
+
+  # ================================
+  # JOB 3: Test Backend Monolith (legacy / DeployCC)
   # ================================
   test-backend:
-    name: "🐍 Test Backend"
+    name: "🐍 Test Backend (Monolith)"
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: sqlite:///./test.db
@@ -45,24 +127,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: "📦 Cache pip packages"
+      - name: "📦 Cache pip (backend)"
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          key: ${{ runner.os }}-pip-backend-${{ hashFiles('backend/requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pip-
+            ${{ runner.os }}-pip-backend-
 
       - name: "📥 Install dependencies"
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: "🧪 Run tests with coverage"
+      - name: "🧪 Run monolith tests"
         run: pytest
 
   # ================================
-  # JOB 2: Test Frontend (React/Vitest)
+  # JOB 4: Test Frontend
   # ================================
   test-frontend:
     name: "⚛️ Test Frontend"
@@ -93,24 +175,37 @@ jobs:
         run: npm run build
 
   # ================================
-  # JOB 3: Build Docker Images
+  # JOB 5: Build Docker Images (per service)
   # ================================
   build-docker:
-    name: "🐳 Build Docker"
+    name: "🐳 Build Docker Images"
     runs-on: ubuntu-latest
-    needs: [test-backend, test-frontend] # Hanya jalan jika kedua test PASS
+    needs:
+      - test-auth-service
+      - test-item-service
+      - test-backend
+      - test-frontend
 
     steps:
       - name: "📥 Checkout code"
         uses: actions/checkout@v4
 
-      - name: "🐳 Build backend image"
-        run: docker build -t cloudapp-backend:ci ./backend
+      - name: "🐳 Build auth-service image"
+        run: docker build -t simcuti-auth-service:ci ./services/auth-service
+
+      - name: "🐳 Build item-service image"
+        run: docker build -t simcuti-item-service:ci ./services/item-service
 
       - name: "🐳 Build frontend image"
-        run: docker build -t cloudapp-frontend:ci ./frontend
+        run: docker build -t simcuti-frontend:ci ./frontend
 
-      - name: "✅ Build success"
+      - name: "🐳 Build backend image (DeployCC legacy)"
+        run: docker build -t simcuti-backend:ci ./backend
+
+      - name: "✅ Validate docker-compose config"
+        run: docker compose config --quiet
+
+      - name: "✅ Build summary"
         run: |
-          echo "All Docker images built successfully!"
-          docker images | grep cloudapp
+          echo "All service images built successfully:"
+          docker images | grep -E "simcuti-(auth|item|frontend|backend)"
