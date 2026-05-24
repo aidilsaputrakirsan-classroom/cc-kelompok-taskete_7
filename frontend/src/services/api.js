@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
 // ==================== TOKEN MANAGEMENT ====================
 
@@ -30,6 +30,9 @@ function authHeaders() {
 
 // Helper: handle response errors
 async function handleResponse(response) {
+  if (response.status === 502 || response.status === 503 || response.status === 504) {
+    throw new Error("Service temporarily unavailable")
+  }
   if (response.status === 401) {
     clearToken()
     throw new Error("UNAUTHORIZED")

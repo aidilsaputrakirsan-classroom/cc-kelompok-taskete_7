@@ -4,7 +4,7 @@
  */
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
 
 // ==================== AXIOS INSTANCE ====================
 const api = axios.create({
@@ -40,6 +40,10 @@ api.interceptors.response.use(
 
 // ==================== HELPER ====================
 const handleError = (error) => {
+  const status = error.response?.status;
+  if (status === 502 || status === 503 || status === 504 || error.code === 'ERR_NETWORK') {
+    throw new Error('Service temporarily unavailable');
+  }
   const msg =
     error.response?.data?.detail ||
     error.response?.data?.message ||
