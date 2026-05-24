@@ -9,11 +9,12 @@ from sqlalchemy.orm import Session
 
 from database import engine, get_db, Base
 from models import Item
-from schemas import ItemCreate, ItemUpdate, ItemResponse, ItemListResponse
+from schemas import ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse
 from auth_client import verify_token_with_auth_service
 
-# Create tables
-Base.metadata.create_all(bind=engine)
+# Create tables (skip dalam test environment)
+if os.getenv("TESTING") != "true":
+    Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Item Service",
@@ -77,6 +78,35 @@ async def get_items(
     total = query.count()
     items = query.offset(skip).limit(limit).all()
     return ItemListResponse(total=total, items=items)
+
+
+@app.get("/items/stats", response_model=ItemStatsResponse)
+async def get_items_stats(
+    user: dict = Depends(verify_token_with_auth_service),
+    db: Session = Depends(get_db),
+):
+    """Ambil statistik items milik user yang login."""
+    query = db.query(Item).filter(Item.owner_id == user["user_id"])
+    
+    # Total items
+    total_items = query.count()
+    
+    # Total value (sum of price * quantity)
+    all_items = query.all()
+    total_value = sum(item.price * item.quantity for item in all_items)
+    
+    # Most expensive item
+    most_expensive = query.order_by(Item.price.desc()).first()
+    
+    # Cheapest item
+    cheapest = query.order_by(Item.price.asc()).first()
+    
+    return ItemStatsResponse(
+        total_items=total_items,
+        total_value=total_value,
+        most_expensive=most_expensive,
+        cheapest=cheapest,
+    )
 
 
 @app.get("/items/{item_id}", response_model=ItemResponse)
