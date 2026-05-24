@@ -32,3 +32,10 @@ class ItemResponse(BaseModel):
 class ItemListResponse(BaseModel):
     total: int
     items: list[ItemResponse]
+
+
+class ItemStatsResponse(BaseModel):
+    total_items: int
+    total_value: float
+    most_expensive: Optional[ItemResponse] = None
+    cheapest: Optional[ItemResponse] = None
