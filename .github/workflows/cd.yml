@@ -551,6 +551,81 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       # ──────────────────────────────────────────────────────────────
+      # HEALTH CHECK — verifikasi /api/health setelah deploy
+      # ──────────────────────────────────────────────────────────────
+      - name: Health check production API
+        id: health
+        if: steps.deploy.outcome == 'success'
+        run: |
+          set -euo pipefail
+          DOMAIN="${{ steps.deploy.outputs.domain }}"
+          if [ -z "$DOMAIN" ]; then
+            echo "::error::Domain tidak tersedia dari response DeployCC — tidak bisa health check"
+            exit 1
+          fi
+
+          HEALTH_URL="${DOMAIN%/}/api/health"
+          echo "🏥 Health check URL: $HEALTH_URL"
+          echo "Menunggu layanan siap (retry hingga ~3 menit)..."
+
+          MAX_ATTEMPTS=18
+          WAIT_SEC=10
+          for attempt in $(seq 1 "$MAX_ATTEMPTS"); do
+            echo "::group::Percobaan $attempt/$MAX_ATTEMPTS"
+            HTTP_CODE=$(curl -sS -o /tmp/health-body.json -w "%{http_code}" \
+              --max-time 30 \
+              "$HEALTH_URL" 2>/dev/null || echo "000")
+            echo "HTTP status: $HTTP_CODE"
+            cat /tmp/health-body.json 2>/dev/null || echo "(empty body)"
+            echo "::endgroup::"
+
+            if [ "$HTTP_CODE" = "200" ]; then
+              if python3 -c "
+import json, sys
+with open('/tmp/health-body.json', encoding='utf-8') as f:
+    data = json.load(f)
+status = data.get('status')
+if status == 'healthy':
+    print('OK:', data)
+    sys.exit(0)
+print('FAIL: status=%r body=%s' % (status, data), file=sys.stderr)
+sys.exit(1)
+"; then
+                echo "health_ok=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+            fi
+
+            sleep "$WAIT_SEC"
+          done
+
+          echo "::error::Health check GAGAL — $HEALTH_URL tidak mengembalikan status healthy setelah $MAX_ATTEMPTS percobaan"
+          echo "health_ok=false" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: Health check failed alert
+        if: failure() && steps.health.outcome == 'failure'
+        run: |
+          {
+            echo "## ❌ Health Check Gagal — Deploy Dianggap Gagal"
+            echo ""
+            echo "Pipeline deploy ke DeployCC selesai, tetapi **/api/health** tidak lulus verifikasi."
+            echo ""
+            echo "| Item | Nilai |"
+            echo "|------|-------|"
+            echo "| URL | ${{ steps.deploy.outputs.domain }}/api/health |"
+            echo "| Backend live (DeployCC) | ${{ steps.deploy.outputs.backend_live }} |"
+            echo "| Service | \`${{ steps.deploy.outputs.srv_status }}\` |"
+            echo ""
+            echo "### Langkah cepat"
+            echo "1. Buka [deployment guide](https://github.com/${{ github.repository }}/blob/main/docs/deployment-guide.md#rollback-manual-setelah-deploy-gagal)"
+            echo "2. SSH → \`svc-status\`, \`svc-logs\`, \`chmod +x venv/bin/uvicorn\`, \`svc-restart\`"
+            echo "3. Atau lakukan **rollback manual** (revert commit + redeploy)"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::Production health check failed — lihat job summary dan deployment guide (rollback)"
+
+      # ──────────────────────────────────────────────────────────────
       # DEPLOYMENT NOTIFICATION — summary + job outputs (SHA, timestamp, URL)
       # ──────────────────────────────────────────────────────────────
       - name: Build deployment notification
@@ -559,6 +634,7 @@ jobs:
         env:
           HEAD_SHA: ${{ needs.detect-changes.outputs.head_sha }}
           DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          HEALTH_OUTCOME: ${{ steps.health.outcome }}
           DOMAIN: ${{ steps.deploy.outputs.domain }}
           BACKEND_LIVE: ${{ steps.deploy.outputs.backend_live }}
           SRV_STATUS: ${{ steps.deploy.outputs.srv_status }}
@@ -576,9 +652,15 @@ jobs:
             PRODUCTION_URL="${DOMAIN%/}"
             API_URL="${PRODUCTION_URL}/api"
             HEALTH_URL="${API_URL}/health"
-            if [ "$BACKEND_LIVE" = "YES" ]; then
+            if [ "$HEALTH_OUTCOME" = "success" ]; then
               STATUS="success"
-              STATUS_LABEL="✅ Deploy berhasil"
+              STATUS_LABEL="✅ Deploy + health check berhasil"
+            elif [ "$HEALTH_OUTCOME" = "failure" ]; then
+              STATUS="failure"
+              STATUS_LABEL="❌ Health check gagal"
+            elif [ "$BACKEND_LIVE" = "YES" ]; then
+              STATUS="warning"
+              STATUS_LABEL="⚠️ Deploy terkirim — health check belum dijalankan"
             else
               STATUS="warning"
               STATUS_LABEL="⚠️ Deploy terkirim — backend belum live"
@@ -712,7 +794,7 @@ jobs:
       # SUMMARY — tampilan akhir ke GitHub Actions UI (detail DeployCC)
       # ──────────────────────────────────────────────────────────────
       - name: Write deploy summary
-        if: always() && steps.deploy.outcome == 'success'
+        if: always() && steps.deploy.outcome == 'success' && steps.health.outcome == 'success'
         run: |
           live="${{ steps.deploy.outputs.backend_live }}"
           status="${{ steps.deploy.outputs.srv_status }}"
@@ -736,6 +818,7 @@ jobs:
             echo "| 🕐 Deployed at | \`${{ steps.notify.outputs.timestamp }}\` |"
             echo "| 📌 Commit | [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${SHA}) |"
             echo "| 🌐 URL | ${{ steps.deploy.outputs.domain }} |"
+            echo "| 🏥 Health check | ✅ \`/api/health\` → \`status: healthy\` |"
             echo "| 🐍 Backend live | $live_icon |"
             echo "| ⚙️ Service status | \`$status\` |"
             echo "| 🔌 Uvicorn port | ${{ steps.deploy.outputs.port }} |"

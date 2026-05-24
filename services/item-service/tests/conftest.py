@@ -1,76 +1,72 @@
-"""Test configuration and fixtures for Item Service."""
+"""Test fixtures — Item Service (SQLite + mock Auth Service)."""
+import os
+
 import pytest
+from fastapi import Header
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import sys
-import os
+from sqlalchemy.pool import StaticPool
 
-# Set TESTING environment variable
 os.environ["TESTING"] = "true"
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import database
 
-from database import Base, get_db
-from models import Item
-
-# Create test database
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+database.engine = engine
+database.SessionLocal = TestingSessionLocal
 
-# Create tables before importing app
-Base.metadata.create_all(bind=engine)
+from database import Base, get_db  # noqa: E402
+from models import Item  # noqa: E402
+from main import app  # noqa: E402
+from auth_client import verify_token_with_auth_service  # noqa: E402
 
 
-def override_get_db():
+async def _mock_verify_token(authorization: str = Header(default="Bearer test-token")) -> dict:
+    return {"user_id": 1, "email": "test@example.com", "name": "Test User"}
+
+
+@pytest.fixture(scope="function")
+def db_session():
+    Base.metadata.create_all(bind=engine)
+    session = TestingSessionLocal()
     try:
-        db = TestingSessionLocal()
-        yield db
+        yield session
     finally:
-        db.close()
-
-
-def override_verify_token():
-    """Mock token verification — return test user."""
-    return {"user_id": 1, "username": "testuser", "role": "user"}
-
-
-# Import app after creating tables
-from main import app
-from auth_client import verify_token_with_auth_service
+        session.close()
+        Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
-def db():
-    """Create test database session."""
-    connection = engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-    
-    yield session
-    
-    session.close()
-    transaction.rollback()
-    connection.close()
+def db(db_session):
+    """Alias untuk test stats yang memakai fixture `db`."""
+    yield db_session
 
 
 @pytest.fixture(scope="function")
-def client(db):
-    """Create test client with mocked dependencies."""
-    app.dependency_overrides[get_db] = lambda: db
-    app.dependency_overrides[verify_token_with_auth_service] = override_verify_token
-    
-    yield TestClient(app)
-    
+def client(db_session):
+    def override_get_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[verify_token_with_auth_service] = _mock_verify_token
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
 
 
 @pytest.fixture
-def sample_items(db):
-    """Create sample items for testing."""
+def sample_items(db_session):
+    """Sample items untuk test /items/stats."""
     items = [
         Item(
             name="Laptop",
@@ -94,12 +90,12 @@ def sample_items(db):
             owner_id=1,
         ),
     ]
-    
+
     for item in items:
-        db.add(item)
-    db.commit()
-    
+        db_session.add(item)
+    db_session.commit()
+
     for item in items:
-        db.refresh(item)
-    
+        db_session.refresh(item)
+
     return items
