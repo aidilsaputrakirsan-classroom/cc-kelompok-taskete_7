@@ -82,8 +82,19 @@ services:
       auth-db:
         condition: service_healthy
 
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://127.0.0.1:8001/health'')"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   # =====================================================
-  # CUTI SERVICE
+  # CUTI SERVICE (item-service)
   # =====================================================
   cuti-service:
     build:
@@ -107,9 +118,19 @@ services:
     depends_on:
       cuti-db:
         condition: service_healthy
-
       auth-service:
-        condition: service_started
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://127.0.0.1:8002/health'')"',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # =====================================================
   # FRONTEND
@@ -156,9 +177,12 @@ services:
       - simcuti-network
 
     depends_on:
-      - auth-service
-      - cuti-service
-      - frontend
+      auth-service:
+        condition: service_healthy
+      cuti-service:
+        condition: service_healthy
+      frontend:
+        condition: service_started
 
 # =====================================================
 # VOLUMES

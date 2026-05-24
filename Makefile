@@ -6,8 +6,8 @@
 # Usage: make <target>
 # ============================================================
 
-.PHONY: up run build down clean push push-hub restart logs logs-backend logs-frontend logs-db ps \
-        shell-backend shell-db seed help
+.PHONY: up run build down clean push push-hub restart logs logs-auth logs-cuti logs-frontend logs-db ps \
+        shell-auth shell-cuti shell-db seed help
 
 # ===== Docker Hub (untuk: make push DOCKERHUB_USER=namauser) =====
 DOCKERHUB_USER ?=
@@ -41,36 +41,39 @@ help:
 	@echo "$(GREEN)  make restart$(RESET)         Restart semua services"
 	@echo "$(GREEN)  make ps$(RESET)              Status semua services"
 	@echo "$(GREEN)  make logs$(RESET)            Lihat logs semua services (follow)"
-	@echo "$(GREEN)  make logs-backend$(RESET)    Lihat logs backend saja"
+	@echo "$(GREEN)  make logs-auth$(RESET)       Lihat logs auth-service"
+	@echo "$(GREEN)  make logs-cuti$(RESET)       Lihat logs cuti-service (item-service)"
 	@echo "$(GREEN)  make logs-frontend$(RESET)   Lihat logs frontend saja"
-	@echo "$(GREEN)  make logs-db$(RESET)         Lihat logs database saja"
-	@echo "$(GREEN)  make shell-backend$(RESET)   Masuk ke shell container backend"
+	@echo "$(GREEN)  make logs-db$(RESET)         Lihat logs database (auth-db + cuti-db)"
+	@echo "$(GREEN)  make shell-auth$(RESET)      Shell auth-service"
+	@echo "$(GREEN)  make shell-cuti$(RESET)      Shell cuti-service"
 	@echo "$(GREEN)  make shell-db$(RESET)        Masuk ke psql database"
 	@echo "$(GREEN)  make seed$(RESET)            Jalankan database seeder"
 	@echo ""
 
-## Start semua services (background) — sama dengan modul: make run
+## Start semua services (background) — gateway menunggu auth & cuti healthy
 up:
-	@echo "$(GREEN)🚀 Starting SIMCUTI services...$(RESET)"
-	docker compose up -d
+	@echo "$(GREEN)🚀 Starting SIMCUTI microservices...$(RESET)"
+	docker compose up -d --wait
 	@echo ""
-	@echo "$(GREEN)✅ Services started!$(RESET)"
-	@echo "$(CYAN)   🌐 Frontend : http://localhost:3000$(RESET)"
-	@echo "$(CYAN)   🔧 Backend  : http://localhost:8000$(RESET)"
-	@echo "$(CYAN)   📚 Swagger  : http://localhost:8000/docs$(RESET)"
-	@echo "$(CYAN)   🗄️  Database : localhost:5433$(RESET)"
+	@echo "$(GREEN)✅ Services started (health checks passed)!$(RESET)"
+	@echo "$(CYAN)   🚪 Gateway   : http://localhost$(RESET)"
+	@echo "$(CYAN)   🌐 Frontend  : http://localhost:3000$(RESET)"
+	@echo "$(CYAN)   🔐 Auth API  : http://localhost:8001/health$(RESET)"
+	@echo "$(CYAN)   📦 Cuti API  : http://localhost:8002/health$(RESET)"
+	@echo "$(CYAN)   📊 Status    : make ps$(RESET)"
 
 ## Alias modul 5: make run = make up
 run: up
 
 ## Rebuild images + start
 build:
-	@echo "$(YELLOW)🔨 Building & starting SIMCUTI...$(RESET)"
-	docker compose up --build -d
+	@echo "$(YELLOW)🔨 Building & starting SIMCUTI microservices...$(RESET)"
+	docker compose up --build -d --wait
 	@echo ""
 	@echo "$(GREEN)✅ Build complete! Services started.$(RESET)"
+	@echo "$(CYAN)   🚪 Gateway  : http://localhost$(RESET)"
 	@echo "$(CYAN)   🌐 Frontend : http://localhost:3000$(RESET)"
-	@echo "$(CYAN)   🔧 Backend  : http://localhost:8000/docs$(RESET)"
 
 ## Stop & hapus containers (volume tetap ada)
 down:
@@ -131,27 +134,35 @@ ps:
 logs:
 	docker compose logs -f
 
-## Lihat logs backend saja
-logs-backend:
-	docker compose logs -f backend
+## Lihat logs auth-service
+logs-auth:
+	docker compose logs -f auth-service
 
-## Lihat logs frontend saja  
+## Lihat logs cuti-service (item-service)
+logs-cuti:
+	docker compose logs -f cuti-service
+
+## Lihat logs frontend saja
 logs-frontend:
 	docker compose logs -f frontend
 
-## Lihat logs database saja
+## Lihat logs database (auth-db + cuti-db)
 logs-db:
-	docker compose logs -f db
+	docker compose logs -f auth-db cuti-db
 
-## Masuk ke shell container backend
-shell-backend:
-	docker compose exec backend bash
+## Masuk ke shell auth-service
+shell-auth:
+	docker compose exec auth-service bash
 
-## Masuk ke psql database
+## Masuk ke shell cuti-service
+shell-cuti:
+	docker compose exec cuti-service bash
+
+## Masuk ke psql auth database
 shell-db:
-	docker compose exec db psql -U postgres -d simcuti
+	docker compose exec auth-db psql -U postgres -d auth_db
 
-## Jalankan seeder manual
+## Jalankan seeder manual (jika ada di auth-service)
 seed:
-	@echo "$(GREEN)🌱 Running database seeder...$(RESET)"
-	docker compose exec backend python seed.py
+	@echo "$(GREEN)🌱 Running seeder (auth-service)...$(RESET)"
+	docker compose exec auth-service python seed.py 2>/dev/null || echo "seed.py tidak ditemukan — lewati"
