@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { checkHealth } from '../../services/api'
+import { checkHealth, register } from '../../services/api'
 
 global.fetch = vi.fn()
 
@@ -24,5 +24,15 @@ describe('API Service', () => {
 
     const isHealthy = await checkHealth()
     expect(isHealthy).toBe(false)
+  })
+
+  it('register melempar error "Service temporarily unavailable" jika gateway mengembalikan status 502/503/504', async () => {
+    fetch.mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: () => Promise.resolve({ detail: 'Bad Gateway' }),
+    })
+
+    await expect(register({ email: 'test@example.com' })).rejects.toThrow('Service temporarily unavailable')
   })
 })
