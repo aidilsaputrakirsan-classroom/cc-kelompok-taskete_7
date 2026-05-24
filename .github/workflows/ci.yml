@@ -109,7 +109,7 @@ jobs:
   # JOB 3: Test Backend Monolith (legacy / DeployCC)
   # ================================
   test-backend:
-    name: "Test Backend"
+    name: "🐍 Test Backend"
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: sqlite:///./test.db
@@ -178,7 +178,7 @@ jobs:
   # JOB 5: Build Docker Images (per service)
   # ================================
   build-docker:
-    name: "Build Docker"
+    name: "🐳 Build Docker"
     runs-on: ubuntu-latest
     needs:
       - test-auth-service
