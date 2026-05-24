@@ -20,6 +20,7 @@ concurrency:
 permissions:
   contents: read
   actions: read
+  pull-requests: write
 
 env:
   DEPLOY_ENDPOINT: https://deploycc.akhzafachrozy.my.id
@@ -143,6 +144,15 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     needs: detect-changes
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    outputs:
+      deployed_sha: ${{ needs.detect-changes.outputs.head_sha }}
+      deployment_url: ${{ steps.notify.outputs.production_url }}
+      deployment_status: ${{ steps.notify.outputs.status }}
+      deployment_timestamp: ${{ steps.notify.outputs.timestamp }}
 
     steps:
       - name: Checkout
@@ -616,7 +626,172 @@ sys.exit(1)
           echo "::error::Production health check failed — lihat job summary dan deployment guide (rollback)"
 
       # ──────────────────────────────────────────────────────────────
-      # SUMMARY — tampilan akhir ke GitHub Actions UI
+      # DEPLOYMENT NOTIFICATION — summary + job outputs (SHA, timestamp, URL)
+      # ──────────────────────────────────────────────────────────────
+      - name: Build deployment notification
+        id: notify
+        if: always()
+        env:
+          HEAD_SHA: ${{ needs.detect-changes.outputs.head_sha }}
+          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
+          HEALTH_OUTCOME: ${{ steps.health.outcome }}
+          DOMAIN: ${{ steps.deploy.outputs.domain }}
+          BACKEND_LIVE: ${{ steps.deploy.outputs.backend_live }}
+          SRV_STATUS: ${{ steps.deploy.outputs.srv_status }}
+        run: |
+          set -euo pipefail
+          DEPLOYED_AT=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          REPO="${{ github.repository }}"
+          SHA="${HEAD_SHA}"
+          SHORT_SHA="${SHA:0:7}"
+          COMMIT_URL="https://github.com/${REPO}/commit/${SHA}"
+          RUN_URL="${{ github.server_url }}/${REPO}/actions/runs/${{ github.run_id }}"
+          TRIGGER="${{ github.event_name }}"
+
+          if [ "$DEPLOY_OUTCOME" = "success" ] && [ -n "$DOMAIN" ]; then
+            PRODUCTION_URL="${DOMAIN%/}"
+            API_URL="${PRODUCTION_URL}/api"
+            HEALTH_URL="${API_URL}/health"
+            if [ "$HEALTH_OUTCOME" = "success" ]; then
+              STATUS="success"
+              STATUS_LABEL="✅ Deploy + health check berhasil"
+            elif [ "$HEALTH_OUTCOME" = "failure" ]; then
+              STATUS="failure"
+              STATUS_LABEL="❌ Health check gagal"
+            elif [ "$BACKEND_LIVE" = "YES" ]; then
+              STATUS="warning"
+              STATUS_LABEL="⚠️ Deploy terkirim — health check belum dijalankan"
+            else
+              STATUS="warning"
+              STATUS_LABEL="⚠️ Deploy terkirim — backend belum live"
+            fi
+          else
+            STATUS="failure"
+            STATUS_LABEL="❌ Deploy gagal"
+            PRODUCTION_URL=""
+            API_URL=""
+            HEALTH_URL=""
+          fi
+
+          NOTIF_FILE="/tmp/deployment-notification.md"
+          {
+            echo "## 🚀 Deployment Notification"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Status | ${STATUS_LABEL} |"
+            echo "| Timestamp | \`${DEPLOYED_AT}\` |"
+            echo "| Commit | [\`${SHORT_SHA}\`](${COMMIT_URL}) (\`${SHA}\`) |"
+            echo "| Trigger | \`${TRIGGER}\` |"
+            echo "| Workflow run | [View run](${RUN_URL}) |"
+            if [ -n "$PRODUCTION_URL" ]; then
+              echo "| Production URL | ${PRODUCTION_URL} |"
+              echo "| API base | ${API_URL} |"
+              echo "| Health check | ${HEALTH_URL} |"
+            fi
+            if [ "$DEPLOY_OUTCOME" = "success" ]; then
+              echo "| Backend live | \`${BACKEND_LIVE:-unknown}\` |"
+              echo "| Service | \`${SRV_STATUS:-unknown}\` |"
+              echo "| ZIP size | \`${{ steps.pkg.outputs.size }}\` |"
+            fi
+            echo ""
+            echo "<!-- deploy-cc-notification -->"
+          } > "$NOTIF_FILE"
+
+          {
+            cat "$NOTIF_FILE"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          {
+            echo "timestamp=${DEPLOYED_AT}"
+            echo "status=${STATUS}"
+            echo "production_url=${PRODUCTION_URL}"
+            echo "commit_sha=${SHA}"
+            echo "commit_short=${SHORT_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "summary<<DEPLOY_NOTIFY_EOF"
+            cat "$NOTIF_FILE"
+            echo "DEPLOY_NOTIFY_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post deployment notification to PR
+        if: always() && steps.notify.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- deploy-cc-notification -->';
+            const sha = '${{ needs.detect-changes.outputs.head_sha }}';
+            const bodyPath = '/tmp/deployment-notification.md';
+
+            if (!fs.existsSync(bodyPath)) {
+              core.info('File notifikasi tidak ada — lewati komentar PR');
+              return;
+            }
+
+            let body = fs.readFileSync(bodyPath, 'utf8');
+            if (!body.includes(marker)) {
+              body = `${marker}\n${body}`;
+            }
+
+            const { owner, repo } = context.repo;
+            let prs = [];
+            try {
+              const res = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner,
+                repo,
+                commit_sha: sha,
+              });
+              prs = res.data.filter((pr) => pr.state === 'open' || pr.merged_at);
+            } catch (err) {
+              core.warning(`Tidak bisa mengambil PR untuk commit ${sha}: ${err.message}`);
+            }
+
+            if (prs.length === 0) {
+              core.info(`Tidak ada PR terkait commit ${sha} — notifikasi hanya di Actions summary & job outputs`);
+              return;
+            }
+
+            for (const pr of prs) {
+              const issue_number = pr.number;
+              const { data: comments } = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number,
+                per_page: 100,
+              });
+
+              const existing = comments.find(
+                (c) =>
+                  c.body &&
+                  c.body.includes(marker) &&
+                  (c.user.type === 'Bot' || c.user.login === 'github-actions[bot]')
+              );
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner,
+                  repo,
+                  comment_id: existing.id,
+                  body,
+                });
+                core.info(`Memperbarui komentar deploy di PR #${issue_number}`);
+              } else {
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number,
+                  body,
+                });
+                core.info(`Menambah komentar deploy di PR #${issue_number}`);
+              }
+            }
+
+      # ──────────────────────────────────────────────────────────────
+      # SUMMARY — tampilan akhir ke GitHub Actions UI (detail DeployCC)
       # ──────────────────────────────────────────────────────────────
       - name: Write deploy summary
         if: always() && steps.deploy.outcome == 'success' && steps.health.outcome == 'success'
@@ -624,6 +799,8 @@ sys.exit(1)
           live="${{ steps.deploy.outputs.backend_live }}"
           status="${{ steps.deploy.outputs.srv_status }}"
           env_auto="${{ steps.deploy.outputs.env_auto }}"
+          SHA="${{ needs.detect-changes.outputs.head_sha }}"
+          SHORT_SHA="${SHA:0:7}"
 
           # Icon untuk backend live status
           if [ "$live" = "YES" ]; then
@@ -638,6 +815,8 @@ sys.exit(1)
             echo ""
             echo "| Field | Value |"
             echo "|-------|-------|"
+            echo "| 🕐 Deployed at | \`${{ steps.notify.outputs.timestamp }}\` |"
+            echo "| 📌 Commit | [\`${SHORT_SHA}\`](https://github.com/${{ github.repository }}/commit/${SHA}) |"
             echo "| 🌐 URL | ${{ steps.deploy.outputs.domain }} |"
             echo "| 🏥 Health check | ✅ \`/api/health\` → \`status: healthy\` |"
             echo "| 🐍 Backend live | $live_icon |"
