@@ -3,16 +3,24 @@
  */
 import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
+import { useServiceStatus } from './context/ServiceStatusContext';
 import LoginPage from './pages/LoginPage';
 import KaryawanDashboard from './pages/KaryawanDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ServiceUnavailablePage from './pages/ServiceUnavailablePage';
 import AboutPage from './components/AboutPage';
-import { Spinner } from './components/shared';
+import { Spinner, DegradedBanner } from './components/shared';
 import './App.css';
 
 export default function App() {
   const { user, loading } = useAuth();
+  const { isUnavailable } = useServiceStatus();
   const [showAbout, setShowAbout] = useState(false);
+
+  // Jika server/gateway offline total (503), tampilkan halaman fallback blocking
+  if (isUnavailable) {
+    return <ServiceUnavailablePage />;
+  }
 
   if (loading) {
     return (
@@ -30,10 +38,20 @@ export default function App() {
     );
   }
 
-  if (showAbout) return <AboutPage onBack={() => setShowAbout(false)} />;
-
-  if (!user) return <LoginPage onShowAbout={() => setShowAbout(true)} />;
-
-  if (user.role === 'admin') return <AdminDashboard onShowAbout={() => setShowAbout(true)} />;
-  return <KaryawanDashboard onShowAbout={() => setShowAbout(true)} />;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <DegradedBanner />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {showAbout ? (
+          <AboutPage onBack={() => setShowAbout(false)} />
+        ) : !user ? (
+          <LoginPage onShowAbout={() => setShowAbout(true)} />
+        ) : user.role === 'admin' ? (
+          <AdminDashboard onShowAbout={() => setShowAbout(true)} />
+        ) : (
+          <KaryawanDashboard onShowAbout={() => setShowAbout(true)} />
+        )}
+      </div>
+    </div>
+  );
 }

@@ -25,11 +25,25 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor — tangani 401 (token expired)
+// Response interceptor — tangani 401 (token expired) serta status kegagalan layanan global
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Deteksi status sehat/degraded pada endpoint health check
+    if (response.config.url?.endsWith('/health')) {
+      if (response.data?.status === 'degraded') {
+        window.dispatchEvent(new CustomEvent('api-service-degraded', { detail: response.data }));
+      } else if (response.data?.status === 'healthy') {
+        window.dispatchEvent(new CustomEvent('api-service-healthy'));
+      }
+    }
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    if (status === 502 || status === 503 || status === 504 || error.code === 'ERR_NETWORK') {
+      window.dispatchEvent(new CustomEvent('api-service-unavailable'));
+    }
+    if (status === 401) {
       localStorage.removeItem('simcuti_token');
       localStorage.removeItem('simcuti_user');
       window.location.href = '/';

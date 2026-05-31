@@ -96,3 +96,6 @@ export function useToast() {
 
   return { toast, show, close };
 }
+
+export { default as DegradedBanner } from './DegradedBanner';
+
