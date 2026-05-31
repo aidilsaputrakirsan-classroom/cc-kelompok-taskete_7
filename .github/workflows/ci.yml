@@ -10,7 +10,8 @@
 # 2. test-item-service: pytest Item Service (cuti)
 # 3. test-backend: pytest monolith legacy (DeployCC)
 # 4. test-frontend: vitest + build
-# 5. build-docker: Build image per service
+# 5. integration-test: docker compose up → pytest tests/integration/
+# 6. build-docker: Build image per service
 
 name: CI Pipeline
 
@@ -175,7 +176,66 @@ jobs:
         run: npm run build
 
   # ================================
-  # JOB 5: Build Docker Images (per service)
+  # JOB 5: Integration Tests (Modul 13)
+  # ================================
+  integration-test:
+    name: "🔗 Integration Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs:
+      - test-auth-service
+      - test-item-service
+      - test-backend
+      - test-frontend
+
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "📥 Install integration test dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx pytest
+
+      - name: "🐳 Start all services"
+        run: docker compose up -d --build --wait
+
+      - name: "⏳ Wait for gateway and services"
+        run: |
+          echo "Waiting for services to be ready..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost/health > /dev/null; then
+              echo "Gateway ready (attempt $i)"
+              break
+            fi
+            sleep 2
+          done
+          curl -sf http://localhost/health
+          curl -sf http://localhost/auth/health
+          curl -sf http://localhost/items/health
+
+      - name: "🧪 Run integration tests"
+        env:
+          GATEWAY_URL: http://localhost
+        run: pytest tests/integration/ -v --tb=short
+
+      - name: "📋 Debug logs on failure"
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=50
+
+      - name: "🛑 Stop services"
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  # ================================
+  # JOB 6: Build Docker Images (per service)
   # ================================
   build-docker:
     name: "🐳 Build Docker"
@@ -185,6 +245,7 @@ jobs:
       - test-item-service
       - test-backend
       - test-frontend
+      - integration-test
 
     steps:
       - name: "📥 Checkout code"
