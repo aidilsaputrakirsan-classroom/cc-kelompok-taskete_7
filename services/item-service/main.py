@@ -4,7 +4,7 @@ Berkomunikasi dengan Auth Service untuk verifikasi token.
 """
 import os
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Header, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -134,8 +134,8 @@ async def get_items(
 
 @app.get("/items/stats", response_model=ItemStatsResponse)
 async def get_items_stats(
-    authorization: str = Query(default=None, alias="Authorization"),
     db: Session = Depends(get_db),
+    authorization: str | None = Header(default=None),
 ):
     """
     Ambil statistik items dengan GRACEFUL DEGRADATION.

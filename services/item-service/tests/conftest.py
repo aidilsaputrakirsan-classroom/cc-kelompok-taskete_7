@@ -32,6 +32,21 @@ async def _mock_verify_token(authorization: str = Header(default="Bearer test-to
     return {"user_id": 1, "email": "test@example.com", "name": "Test User"}
 
 
+async def _mock_call_auth_service(authorization: str) -> dict:
+    """Mock HTTP call ke Auth Service — dipakai endpoint /items/stats (graceful degradation)."""
+    return {"user_id": 1, "email": "test@example.com", "name": "Test User"}
+
+
+@pytest.fixture(autouse=True)
+def patch_auth_client_for_tests(monkeypatch):
+    monkeypatch.setattr("auth_client._call_auth_service", _mock_call_auth_service)
+
+
+@pytest.fixture
+def auth_headers():
+    return {"Authorization": "Bearer test-token"}
+
+
 @pytest.fixture(scope="function")
 def db_session():
     Base.metadata.create_all(bind=engine)
