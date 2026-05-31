@@ -30,6 +30,12 @@ services:
       timeout: 5s
       retries: 5
 
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+
   # =====================================================
   # CUTI DATABASE
   # =====================================================
@@ -55,6 +61,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
 
   # =====================================================
   # AUTH SERVICE
@@ -92,6 +104,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
 
   # =====================================================
   # CUTI SERVICE (item-service)
@@ -132,6 +150,12 @@ services:
       retries: 5
       start_period: 30s
 
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+
   # =====================================================
   # FRONTEND
   # =====================================================
@@ -156,6 +180,12 @@ services:
     depends_on:
       - auth-service
       - cuti-service
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
 
   # =====================================================
   # API GATEWAY (NGINX)
@@ -183,6 +213,12 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
 
 # =====================================================
 # VOLUMES
