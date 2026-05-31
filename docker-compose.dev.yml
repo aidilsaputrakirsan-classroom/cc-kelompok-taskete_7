@@ -1,0 +1,51 @@
+# ============================================================
+# SIMCUTI — Docker Compose Development Overrides
+# Hot-reload untuk auth-service, cuti-service, dan frontend (Vite)
+#
+# USAGE:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#   make dev
+#
+# Akses:
+#   Gateway (API) : http://localhost
+#   Frontend HMR  : http://localhost:5173
+#   Auth API      : http://localhost:8001
+#   Cuti API      : http://localhost:8002
+# ============================================================
+
+services:
+
+  auth-service:
+    volumes:
+      - ./services/auth-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+  cuti-service:
+    volumes:
+      - ./services/item-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      target: builder
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost
+
+  gateway:
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      cuti-service:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+
+volumes:
+  frontend_node_modules:
