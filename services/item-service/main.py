@@ -3,14 +3,20 @@ Item Service — Handles inventory management.
 Berkomunikasi dengan Auth Service untuk verifikasi token.
 """
 import os
+import logging
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 from database import engine, get_db, Base
 from models import Item
 from schemas import ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse
-from auth_client import verify_token_with_auth_service
+from auth_client import verify_token_with_auth_service, auth_circuit
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Create tables (skip dalam test environment)
 if os.getenv("TESTING") != "true":
@@ -39,10 +45,56 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check():
+    """
+    Health check dengan aggregated dependency status.
+    
+    Returns:
+    - status: healthy, degraded, atau unhealthy
+    - dependencies:
+        - auth-service: circuit breaker status
+        - database: connection status
+    """
+    cb_status = auth_circuit.get_status()
+    
+    # Check database
+    db_status = "connected"
+    db_error = None
+    try:
+        db = next(get_db())
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = "disconnected"
+        db_error = str(e)
+        logger.error(f"Database check failed: {e}")
+    
+    # Determine overall health
+    overall_status = "healthy"
+    
+    if cb_status["state"] != "CLOSED":
+        overall_status = "degraded"
+        logger.warning(
+            f"Health check: auth-service circuit breaker is {cb_status['state']}"
+        )
+    
+    if db_status != "connected":
+        overall_status = "unhealthy"
+        logger.error("Health check: database disconnected")
+    
     return {
-        "status": "healthy",
+        "status": overall_status,
         "service": "item-service",
-        "version": "2.0.0",
+        "version": "2.1.0",
+        "dependencies": {
+            "auth-service": {
+                "status": "available" if cb_status["state"] == "CLOSED" else "unavailable",
+                "circuit_breaker": cb_status,
+            },
+            "database": {
+                "status": db_status,
+                "error": db_error,
+            },
+        },
     }
 
 
@@ -82,11 +134,42 @@ async def get_items(
 
 @app.get("/items/stats", response_model=ItemStatsResponse)
 async def get_items_stats(
-    user: dict = Depends(verify_token_with_auth_service),
+    authorization: str = Query(default=None, alias="Authorization"),
     db: Session = Depends(get_db),
 ):
-    """Ambil statistik items milik user yang login."""
-    query = db.query(Item).filter(Item.owner_id == user["user_id"])
+    """
+    Ambil statistik items dengan GRACEFUL DEGRADATION.
+    
+    Full Mode (Auth OK):
+    - Return stats untuk items milik user yang login
+    
+    Degraded Mode (Auth down atau tidak ada token):
+    - Return aggregate stats untuk semua items (public view)
+    """
+    user = None
+    
+    # 🔄 Coba verifikasi token (optional)
+    if authorization:
+        try:
+            # Import here to avoid circular imports
+            from auth_client import _call_auth_service
+            user = await _call_auth_service(authorization)
+            logger.info(f"Stats requested by user {user.get('user_id')} (FULL MODE)")
+        except HTTPException as e:
+            # Auth failed — graceful degradation
+            logger.warning(
+                f"Auth failed for stats endpoint: {e.detail}. "
+                f"Returning degraded response (aggregate stats)."
+            )
+            user = None
+    
+    if user:
+        # 🟢 FULL MODE: Stats untuk user yang login
+        query = db.query(Item).filter(Item.owner_id == user["user_id"])
+    else:
+        # 📉 DEGRADED MODE: Aggregate stats untuk semua items (public)
+        query = db.query(Item)
+        logger.info("Stats requested without auth (DEGRADED MODE)")
     
     # Total items
     total_items = query.count()
@@ -107,6 +190,34 @@ async def get_items_stats(
         most_expensive=most_expensive,
         cheapest=cheapest,
     )
+
+
+@app.get("/items/public", response_model=ItemListResponse)
+async def get_public_items(
+    search: str = Query(default=None),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    """
+    Ambil daftar items publik — TIDAK BUTUH AUTENTIKASI.
+    
+    Ini adalah bagian dari graceful degradation:
+    - Saat Auth Service down, user tetap bisa melihat item publik
+    - Dalam production, bisa ada flag 'is_public' di model Item
+    
+    Untuk sekarang, return semua items (simulate public items).
+    """
+    logger.info("Public items requested (no auth required)")
+    
+    query = db.query(Item)
+    if search:
+        query = query.filter(Item.name.ilike(f"%{search}%"))
+    
+    total = query.count()
+    items = query.offset(skip).limit(limit).all()
+    
+    return ItemListResponse(total=total, items=items)
 
 
 @app.get("/items/{item_id}", response_model=ItemResponse)
