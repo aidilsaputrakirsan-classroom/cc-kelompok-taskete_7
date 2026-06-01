@@ -90,7 +90,7 @@ def test_user(gateway_url):
     """
     # Generate unique email
     timestamp = int(time.time() * 1000)
-    email = f"test-{timestamp}@integration.test"
+    email = f"test-{timestamp}@example.com"
     password = "IntegrationTest123"
     name = "Integration Test User"
     
