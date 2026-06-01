@@ -6,8 +6,10 @@
 # Usage: make <target>
 # ============================================================
 
-.PHONY: up run build down clean push push-hub restart logs logs-auth logs-cuti logs-frontend logs-db ps \
+.PHONY: up run build dev down clean push push-hub restart logs logs-auth logs-cuti logs-frontend logs-db ps \
         shell-auth shell-cuti shell-db seed help
+
+COMPOSE_DEV = docker compose -f docker-compose.yml -f docker-compose.dev.yml
 
 # ===== Docker Hub (untuk: make push DOCKERHUB_USER=namauser) =====
 DOCKERHUB_USER ?=
@@ -34,6 +36,7 @@ help:
 	@echo ""
 	@echo "$(GREEN)  make up | make run$(RESET)   Start semua services (background); run = alias up"
 	@echo "$(GREEN)  make build$(RESET)           Rebuild images + start"
+	@echo "$(GREEN)  make dev$(RESET)             Start stack dengan hot-reload (dev override)"
 	@echo "$(GREEN)  make push$(RESET)            Tag + push backend & frontend (TAG sama, default latest)"
 	@echo "$(GREEN)  make push-hub$(RESET)         Push modul 6: simcuti-backend:$(BACKEND_TAG) & simcuti-frontend:$(FRONTEND_TAG)"
 	@echo "$(GREEN)  make down$(RESET)            Stop & hapus containers"
@@ -74,6 +77,17 @@ build:
 	@echo "$(GREEN)✅ Build complete! Services started.$(RESET)"
 	@echo "$(CYAN)   🚪 Gateway  : http://localhost$(RESET)"
 	@echo "$(CYAN)   🌐 Frontend : http://localhost:3000$(RESET)"
+
+## Start stack development dengan hot-reload (uvicorn --reload + Vite HMR)
+dev:
+	@echo "$(YELLOW)🔧 Starting SIMCUTI in development mode (hot-reload)...$(RESET)"
+	$(COMPOSE_DEV) up --build -d --wait
+	@echo ""
+	@echo "$(GREEN)✅ Dev stack started!$(RESET)"
+	@echo "$(CYAN)   🚪 Gateway (API) : http://localhost$(RESET)"
+	@echo "$(CYAN)   ⚡ Frontend HMR  : http://localhost:5173$(RESET)"
+	@echo "$(CYAN)   🔐 Auth API       : http://localhost:8001/health$(RESET)"
+	@echo "$(CYAN)   📦 Cuti API       : http://localhost:8002/health$(RESET)"
 
 ## Stop & hapus containers (volume tetap ada)
 down:
