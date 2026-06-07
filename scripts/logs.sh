@@ -34,10 +34,14 @@ case "$1" in
   metrics)
     echo "📊 Fetching metrics..."
     echo "--- Auth Service ---"
-    curl -s http://localhost/auth/metrics | python3 -m json.tool 2>/dev/null || curl -s http://localhost/auth/metrics
+    curl -sf http://localhost/auth/metrics | python3 -m json.tool 2>/dev/null \
+      || curl -sf http://localhost:8001/metrics | python3 -m json.tool 2>/dev/null \
+      || curl -s http://localhost:8001/metrics
     echo ""
     echo "--- Item Service ---"
-    curl -s http://localhost/items/metrics | python3 -m json.tool 2>/dev/null || curl -s http://localhost/items/metrics
+    curl -sf http://localhost/items/metrics | python3 -m json.tool 2>/dev/null \
+      || curl -sf http://localhost:8002/metrics | python3 -m json.tool 2>/dev/null \
+      || curl -s http://localhost:8002/metrics
     ;;
   *)
     echo "Usage: ./scripts/logs.sh {all|errors|trace <id>|export|metrics}"
@@ -46,6 +50,7 @@ case "$1" in
     echo "  errors           Filter JSON logs with level ERROR"
     echo "  trace <id>       Filter by correlation ID"
     echo "  export           Save all compose logs to logs/all-services-YYYYMMDD.log"
-    echo "  metrics          Fetch /auth/metrics and /items/metrics via gateway"
+    echo "  metrics          Fetch metrics via gateway (fallback: direct ports 8001/8002)"
+    exit 1
     ;;
 esac

@@ -36,10 +36,16 @@ switch ($Command) {
     }
     "metrics" {
         Write-Host "--- Auth Service ---"
-        curl.exe -s http://localhost/auth/metrics | python -m json.tool
+        $authMetrics = curl.exe -sf http://localhost/auth/metrics 2>$null
+        if (-not $authMetrics) { $authMetrics = curl.exe -s http://localhost:8001/metrics }
+        $authMetrics | python -m json.tool 2>$null
+        if (-not $?) { Write-Host $authMetrics }
         Write-Host ""
         Write-Host "--- Item Service ---"
-        curl.exe -s http://localhost/items/metrics | python -m json.tool
+        $itemMetrics = curl.exe -sf http://localhost/items/metrics 2>$null
+        if (-not $itemMetrics) { $itemMetrics = curl.exe -s http://localhost:8002/metrics }
+        $itemMetrics | python -m json.tool 2>$null
+        if (-not $?) { Write-Host $itemMetrics }
     }
     default {
         Write-Host "Usage: .\scripts\logs.ps1 {all|errors|trace <id>|export|metrics}"
