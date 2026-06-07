@@ -5,7 +5,6 @@ Komunikasi antar service dilakukan melalui HTTP request dalam Docker network.
 
 
 ## 1. Architecture Diagram
-
 ```mermaid
 flowchart TD
 
@@ -15,25 +14,32 @@ flowchart TD
 
     FE["Frontend<br/>:3000"]
     AS["Auth Service<br/>:8001"]
-    BS["Backend Service"]
     IS["Item Service<br/>:8002"]
 
     ADB[("auth-db :5434")]
-    DB[("db :5432")]
     IDB[("item-db :5433")]
+
+    CB["Circuit Breaker"]
+    RT["Retry Mechanism"]
+    HC["Health Check"]
 
     USER --> GW
 
     GW --> FE
     GW --> AS
-    GW --> BS
     GW --> IS
 
     AS --> ADB
-    BS --> DB
     IS --> IDB
 
-    IS -.->|"Verify Token"| AS
+    IS --> RT
+    RT --> CB
+    CB -. Verify Token .-> AS
+
+    IS --> HC
+
+    HC --> AS
+    HC --> IDB
 ```
 
 ## 2. Services and Ports
@@ -42,12 +48,28 @@ flowchart TD
 |---|---|---|
 | API Gateway | 80 | Reverse proxy menggunakan Nginx /API Gateaway |
 | Frontend | 3000 | React frontend application |
-| Backend  | 8000 | Backend monolith service |
 | Auth Service | 8001 | Authentication dan JWT service |
-| Item Service | 8002 | CRUD inventory/items |
+| Item Service | 8002 | CRUD item serta implementasi reliability pattern (Retry, Circuit Breaker, Health Check, dan Graceful Degradation) |
 | db | 5432 | PostgreSQL database untuk Backend Service |
 | item-db | 5433 | PostgreSQL database untuk Item Service |
 | auth-db | 5434 | PostgreSQL database untuk Auth Service |
+
+### Reliability Components (Modul 13)
+
+Modul 13 menambahkan beberapa mekanisme reliability pada Item Service untuk meningkatkan ketahanan sistem ketika terjadi gangguan pada Auth Service.
+
+- Retry Mechanism
+  Melakukan percobaan ulang koneksi ke Auth Service menggunakan exponential backoff.
+
+- Circuit Breaker
+  Mencegah pengiriman request berulang ke Auth Service ketika service sedang mengalami kegagalan.
+
+- Health Check
+  Menampilkan status service dan dependency melalui endpoint `/items/health`.
+
+- Graceful Degradation
+  Memungkinkan endpoint publik tetap dapat diakses meskipun Auth Service sedang tidak tersedia.
+
 
 ## 3. API Contract
 

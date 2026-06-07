@@ -4,18 +4,22 @@ Berkomunikasi dengan Auth Service untuk verifikasi token.
 """
 import os
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Header, Query
+from fastapi import FastAPI, Depends, HTTPException, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
+from logging_config import setup_logging
+from logging_middleware import RequestLoggingMiddleware
+from metrics import metrics
+from error_alerting import error_alerting
 from database import engine, get_db, Base
 from models import Item
 from schemas import ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse
 from auth_client import verify_token_with_auth_service, auth_circuit
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
+# Setup structured logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # Create tables (skip dalam test environment)
@@ -37,6 +41,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Logging middleware (dengan correlation ID dan metrics)
+app.add_middleware(RequestLoggingMiddleware)
 
 
 # =====================
@@ -94,6 +101,19 @@ def health_check():
                 "status": db_status,
                 "error": db_error,
             },
+        },
+    }
+
+
+@app.get("/metrics")
+def get_metrics():
+    """Return application metrics."""
+    return {
+        "service": "item-service",
+        **metrics.get_metrics(),
+        "error_alerting": {
+            "error_rate_percent": error_alerting.get_error_rate(),
+            "alert_active": error_alerting.is_alert_active(),
         },
     }
 
