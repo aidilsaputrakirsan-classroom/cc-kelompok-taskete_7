@@ -203,21 +203,29 @@ jobs:
           pip install httpx pytest
 
       - name: "🐳 Start all services"
+        env:
+          COMPOSE_HTTP_TIMEOUT: 300
         run: docker compose up -d --build --wait
 
       - name: "⏳ Wait for gateway and services"
         run: |
-          echo "Waiting for services to be ready..."
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost/health > /dev/null; then
-              echo "Gateway ready (attempt $i)"
-              break
+          echo "Waiting for all endpoints to be ready..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost/health > /dev/null \
+              && curl -sf http://localhost/auth/health > /dev/null \
+              && curl -sf http://localhost/items/health > /dev/null; then
+              echo "All endpoints ready (attempt $i)"
+              curl -s http://localhost/health
+              curl -s http://localhost/auth/health
+              curl -s http://localhost/items/health
+              exit 0
             fi
-            sleep 2
+            sleep 3
           done
-          curl -sf http://localhost/health
-          curl -sf http://localhost/auth/health
-          curl -sf http://localhost/items/health
+          echo "Services not ready after 180s"
+          docker compose ps
+          docker compose logs --tail=40 auth-service cuti-service gateway
+          exit 1
 
       - name: "🧪 Run integration tests"
         env:
