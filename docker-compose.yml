@@ -83,12 +83,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres123@auth-db:5432/auth_db
       SECRET_KEY: super-secret-key
+      SERVICE_NAME: auth-service
+      LOG_LEVEL: INFO
 
     ports:
       - "8001:8001"
 
     networks:
       - simcuti-network
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: auth-service
 
     depends_on:
       auth-db:
@@ -126,12 +135,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres123@cuti-db:5432/cuti_db
       AUTH_SERVICE_URL: http://auth-service:8001
+      SERVICE_NAME: item-service
+      LOG_LEVEL: INFO
 
     ports:
       - "8002:8002"
 
     networks:
       - simcuti-network
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: item-service
 
     depends_on:
       cuti-db:
