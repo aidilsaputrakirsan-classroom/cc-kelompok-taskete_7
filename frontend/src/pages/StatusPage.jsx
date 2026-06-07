@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const API_URL = window.location.origin;
+const API_URL = 'http://localhost';
 
 function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
   const [health, setHealth] = useState(null);
@@ -62,7 +62,7 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
   };
 
   const errorRate = metrics?.error_rate_percent !== undefined ? metrics.error_rate_percent : 0;
-  
+
   // Menentukan warna bar error rate
   let errorBarColor = '#10b981';
   if (errorRate > 10) errorBarColor = '#f59e0b';
@@ -81,7 +81,7 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
             <span style={styles.serviceUrl}>{healthUrl.replace(API_URL, '')}</span>
           </div>
         </div>
-        
+
         <div style={{
           ...styles.statusBadge,
           backgroundColor: statusBg[status],
@@ -155,7 +155,7 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
               <div style={styles.uptimeContainer}>
                 <span style={styles.uptimeLabel}>Uptime</span>
                 <span style={styles.uptimeValue}>
-                  {metrics.uptime_seconds !== undefined 
+                  {metrics.uptime_seconds !== undefined
                     ? `${Math.floor(metrics.uptime_seconds / 3600)}j ${Math.floor((metrics.uptime_seconds % 3600) / 60)}m`
                     : '-'}
                 </span>
@@ -173,7 +173,7 @@ export default function StatusPage({ onBack }) {
   const [countdown, setCountdown] = useState(10);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  
+
   const triggerRefresh = useCallback(() => {
     setIsRefreshing(true);
     setLastChecked(new Date());
@@ -199,7 +199,8 @@ export default function StatusPage({ onBack }) {
   return (
     <div style={styles.container}>
       {/* CSS Animation injection */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes pulse-dot {
           0% { transform: scale(0.9); opacity: 0.6; }
           50% { transform: scale(1.1); opacity: 1; }
@@ -241,8 +242,8 @@ export default function StatusPage({ onBack }) {
               <span style={styles.refreshText}>Refresh in {countdown}s</span>
             </div>
 
-            <button 
-              onClick={triggerRefresh} 
+            <button
+              onClick={triggerRefresh}
               disabled={isRefreshing}
               style={{
                 ...styles.refreshButton,
@@ -288,7 +289,7 @@ export default function StatusPage({ onBack }) {
       {/* Footer Info */}
       <div style={styles.footer}>
         <div style={styles.infoBox}>
-          <strong>💡 Catatan Observabilitas:</strong> Correlation ID secara otomatis dialirkan lintas service 
+          <strong>💡 Catatan Observabilitas:</strong> Correlation ID secara otomatis dialirkan lintas service
           (Gateway ➡️ Cuti Service ➡️ Auth Service) untuk pencatatan log terdistribusi yang mempermudah debugging.
         </div>
         <p style={styles.academicInfo}>Sistem Informasi Manajemen Cuti Karyawan — Institut Teknologi Kalimantan</p>
