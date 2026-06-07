@@ -4,7 +4,16 @@
  */
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+const getBaseUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.port === '3000') {
+      return 'http://localhost';
+    }
+    return window.location.origin;
+  }
+  return import.meta.env.VITE_API_URL || window.location.origin;
+};
+const BASE_URL = getBaseUrl();
 
 // ==================== AXIOS INSTANCE ====================
 const api = axios.create({
