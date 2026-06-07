@@ -75,7 +75,7 @@ def wait_for_services(gateway_url):
             time.sleep(WAIT_INTERVAL)
         
         if not ready:
-            logger.warning(f"⚠️  {name}: Not ready after {WAIT_TIMEOUT}s")
+            pytest.fail(f"{name} not ready after {WAIT_TIMEOUT}s — run: docker compose up -d")
     
     logger.info("Ready to run tests!")
 
