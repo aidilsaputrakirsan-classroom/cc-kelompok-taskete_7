@@ -1,20 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Dynamic API URL detection:
-// 1. If accessed locally at http://localhost:3000, dynamically target Nginx gateway at http://localhost (port 80).
-// 2. If accessed via Nginx gateway directly (e.g. port 80 or 8080), use window.location.origin.
-// 3. Otherwise, use build environment VITE_API_URL or origin.
-const getApiUrl = () => {
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    if (window.location.port === '3000') {
-      return 'http://localhost'; // Gateway port 80
-    }
-    return window.location.origin;
-  }
-  return import.meta.env.VITE_API_URL || window.location.origin;
-};
-
-const API_URL = getApiUrl();
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost';
 
 function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
   const [health, setHealth] = useState(null);
