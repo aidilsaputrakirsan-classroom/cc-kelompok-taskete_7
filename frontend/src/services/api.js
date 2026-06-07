@@ -1,13 +1,4 @@
-const getApiUrl = () => {
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    if (window.location.port === '3000') {
-      return 'http://localhost';
-    }
-    return window.location.origin;
-  }
-  return import.meta.env.VITE_API_URL || window.location.origin;
-};
-const API_URL = getApiUrl();
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost"
 
 // ==================== TOKEN MANAGEMENT ====================
 
