@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost';
+const API_URL = import.meta.env.VITE_API_URL || window.location.origin;
 
 function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
   const [health, setHealth] = useState(null);
