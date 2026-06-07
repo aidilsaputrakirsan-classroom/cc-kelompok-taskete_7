@@ -13,7 +13,7 @@ const MENUS = [
   { id: 'histori', label: 'Histori Saya', icon: '📋' },
 ];
 
-export default function KaryawanDashboard({ onShowAbout }) {
+export default function KaryawanDashboard({ onShowAbout, onShowStatus }) {
   const { user, logout } = useAuth();
   const { toast, show, close } = useToast();
   const [activeMenu, setActiveMenu] = useState('status');
@@ -83,6 +83,11 @@ export default function KaryawanDashboard({ onShowAbout }) {
           {onShowAbout && (
             <button onClick={onShowAbout} className="btn btn-outline" style={{ width: '100%' }} id="karyawan-about-btn">
               ℹ️ Tentang Proyek
+            </button>
+          )}
+          {onShowStatus && (
+            <button onClick={onShowStatus} className="btn btn-outline" style={{ width: '100%', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }} id="karyawan-status-btn">
+              📊 Status Sistem
             </button>
           )}
           <button onClick={logout} className="btn btn-outline" style={{ width: '100%', border: '1px solid #fee2e2', color: '#b91c1c' }}>
