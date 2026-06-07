@@ -274,6 +274,26 @@ jobs:
           docker compose ps
           docker compose logs --tail=50
 
+      - name: "📦 Export Docker logs for artifacts"
+        if: always()
+        run: |
+          mkdir -p ci-logs
+          docker compose ps > ci-logs/compose-ps.txt 2>&1 || true
+          docker compose logs --no-color > ci-logs/all-services.log 2>&1 || true
+          for svc in auth-service auth-db cuti-service cuti-db gateway frontend; do
+            docker compose logs --no-color "$svc" > "ci-logs/${svc}.log" 2>&1 || true
+          done
+          echo "Exported $(find ci-logs -type f | wc -l) log file(s)"
+
+      - name: "📤 Upload Docker logs as CI artifacts"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-docker-logs
+          path: ci-logs/
+          retention-days: 14
+          if-no-files-found: warn
+
       - name: "🛑 Stop services"
         if: always()
         run: docker compose down -v --remove-orphans
