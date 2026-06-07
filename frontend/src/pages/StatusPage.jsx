@@ -1,12 +1,26 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-const API_URL = 'http://localhost';
+// Dynamic API URL detection:
+// 1. If accessed locally at http://localhost:3000, dynamically target Nginx gateway at http://localhost (port 80).
+// 2. If accessed via Nginx gateway directly (e.g. port 80 or 8080), use window.location.origin.
+// 3. Otherwise, use build environment VITE_API_URL or origin.
+const getApiUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.port === '3000') {
+      return 'http://localhost'; // Gateway port 80
+    }
+    return window.location.origin;
+  }
+  return import.meta.env.VITE_API_URL || window.location.origin;
+};
+
+const API_URL = getApiUrl();
 
 function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
   const [health, setHealth] = useState(null);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [prevStatus, setPrevStatus] = useState('unreachable');
+  const [isHovered, setIsHovered] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     setLoading(true);
@@ -46,33 +60,39 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
 
   const status = health?.status || 'unreachable';
 
-  // Menentukan warna berdasarkan status kesehatan
   const statusColor = {
-    healthy: '#10b981', // Emerald Green
-    degraded: '#f59e0b', // Amber Orange
-    unhealthy: '#ef4444', // Red
-    unreachable: '#6b7280', // Cool Grey
+    healthy: '#10b981',
+    degraded: '#f59e0b',
+    unhealthy: '#ef4444',
+    unreachable: '#6b7280',
   };
 
   const statusBg = {
-    healthy: 'rgba(16, 185, 129, 0.1)',
-    degraded: 'rgba(245, 158, 11, 0.1)',
-    unhealthy: 'rgba(239, 68, 68, 0.1)',
-    unreachable: 'rgba(107, 114, 128, 0.1)',
+    healthy: 'rgba(16, 185, 129, 0.08)',
+    degraded: 'rgba(245, 158, 11, 0.08)',
+    unhealthy: 'rgba(239, 68, 68, 0.08)',
+    unreachable: 'rgba(107, 114, 128, 0.08)',
   };
 
   const errorRate = metrics?.error_rate_percent !== undefined ? metrics.error_rate_percent : 0;
-
-  // Menentukan warna bar error rate
+  
   let errorBarColor = '#10b981';
   if (errorRate > 10) errorBarColor = '#f59e0b';
   if (errorRate > 30) errorBarColor = '#ef4444';
 
   return (
-    <div style={{
-      ...styles.card,
-      borderLeft: `5px solid ${statusColor[status]}`,
-    }}>
+    <div 
+      style={{
+        ...styles.card,
+        borderLeft: `5px solid ${statusColor[status]}`,
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: isHovered 
+          ? '0 12px 20px -3px rgba(37, 99, 235, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.02)' 
+          : '0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <div style={styles.cardHeader}>
         <div style={styles.serviceInfo}>
           <span style={styles.serviceIcon}>{icon}</span>
@@ -81,7 +101,7 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
             <span style={styles.serviceUrl}>{healthUrl.replace(API_URL, '')}</span>
           </div>
         </div>
-
+        
         <div style={{
           ...styles.statusBadge,
           backgroundColor: statusBg[status],
@@ -155,7 +175,7 @@ function ServiceCard({ name, icon, healthUrl, metricsUrl }) {
               <div style={styles.uptimeContainer}>
                 <span style={styles.uptimeLabel}>Uptime</span>
                 <span style={styles.uptimeValue}>
-                  {metrics.uptime_seconds !== undefined
+                  {metrics.uptime_seconds !== undefined 
                     ? `${Math.floor(metrics.uptime_seconds / 3600)}j ${Math.floor((metrics.uptime_seconds % 3600) / 60)}m`
                     : '-'}
                 </span>
@@ -173,7 +193,7 @@ export default function StatusPage({ onBack }) {
   const [countdown, setCountdown] = useState(10);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-
+  
   const triggerRefresh = useCallback(() => {
     setIsRefreshing(true);
     setLastChecked(new Date());
@@ -198,12 +218,10 @@ export default function StatusPage({ onBack }) {
 
   return (
     <div style={styles.container}>
-      {/* CSS Animation injection */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes pulse-dot {
           0% { transform: scale(0.9); opacity: 0.6; }
-          50% { transform: scale(1.1); opacity: 1; }
+          50% { transform: scale(1.15); opacity: 1; }
           100% { transform: scale(0.9); opacity: 0.6; }
         }
         @keyframes slide-in {
@@ -215,15 +233,14 @@ export default function StatusPage({ onBack }) {
         }
       `}} />
 
-      {/* Header Panel */}
       <div style={styles.headerPanel}>
         <div style={styles.headerLeft}>
           <button onClick={onBack} style={styles.backButton}>
-            ⬅️ Kembali
+            ← Kembali
           </button>
           <div>
             <h1 style={styles.title}>📊 System Status & Observability</h1>
-            <p style={styles.subtitle}>Pemantauan Real-time Kesehatan Layanan dan Performa SIMCUTI</p>
+            <p style={styles.subtitle}>Pemantauan Kesehatan Layanan dan Performa Real-time SIMCUTI</p>
           </div>
         </div>
 
@@ -242,12 +259,12 @@ export default function StatusPage({ onBack }) {
               <span style={styles.refreshText}>Refresh in {countdown}s</span>
             </div>
 
-            <button
-              onClick={triggerRefresh}
+            <button 
+              onClick={triggerRefresh} 
               disabled={isRefreshing}
               style={{
                 ...styles.refreshButton,
-                cursor: isRefreshing ? 'not-allowed' : 'pointer'
+                opacity: isRefreshing ? 0.8 : 1,
               }}
             >
               <span style={{
@@ -261,7 +278,6 @@ export default function StatusPage({ onBack }) {
         </div>
       </div>
 
-      {/* Services Grid */}
       <div style={styles.grid}>
         <ServiceCard
           key={`auth-${refreshKey}`}
@@ -286,11 +302,10 @@ export default function StatusPage({ onBack }) {
         />
       </div>
 
-      {/* Footer Info */}
       <div style={styles.footer}>
         <div style={styles.infoBox}>
-          <strong>💡 Catatan Observabilitas:</strong> Correlation ID secara otomatis dialirkan lintas service
-          (Gateway ➡️ Cuti Service ➡️ Auth Service) untuk pencatatan log terdistribusi yang mempermudah debugging.
+          <strong>💡 Catatan Observabilitas:</strong> Correlation ID secara otomatis dialirkan lintas service 
+          (Gateway → Cuti Service → Auth Service) untuk pencatatan log terdistribusi yang mempermudah debugging.
         </div>
         <p style={styles.academicInfo}>Sistem Informasi Manajemen Cuti Karyawan — Institut Teknologi Kalimantan</p>
       </div>
@@ -303,7 +318,7 @@ const styles = {
     padding: '2.5rem',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
     color: 'var(--text-primary)',
     animation: 'slide-in 0.4s ease-out',
   },
@@ -317,7 +332,7 @@ const styles = {
     padding: '2rem',
     borderRadius: '16px',
     border: '1px solid var(--border-color)',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
     marginBottom: '2.5rem',
   },
   headerLeft: {
@@ -327,14 +342,15 @@ const styles = {
   },
   backButton: {
     padding: '0.6rem 1.2rem',
-    backgroundColor: '#f1f5f9',
-    color: '#334155',
-    border: '1px solid #cbd5e1',
+    backgroundColor: '#ffffff',
+    color: 'var(--text-secondary)',
+    border: '1px solid var(--border-color)',
     borderRadius: '10px',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.15s ease',
     outline: 'none',
+    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
   },
   title: {
     margin: 0,
@@ -376,7 +392,7 @@ const styles = {
     border: '1px solid #e2e8f0',
     fontSize: '0.85rem',
     fontWeight: '700',
-    color: '#0f172a',
+    color: 'var(--text-primary)',
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
@@ -400,7 +416,9 @@ const styles = {
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.15s ease',
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(37, 99, 235, 0.2)',
   },
   grid: {
     display: 'grid',
@@ -412,9 +430,8 @@ const styles = {
     backgroundColor: '#ffffff',
     borderRadius: '16px',
     border: '1px solid var(--border-color)',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02)',
     overflow: 'hidden',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
   },
   cardHeader: {
     padding: '1.5rem',
@@ -458,7 +475,7 @@ const styles = {
     height: '8px',
     borderRadius: '50%',
     display: 'inline-block',
-    animation: 'pulse-dot 1.5s infinite ease-in-out',
+    animation: 'pulse-dot 1.8s infinite ease-in-out',
   },
   cardBody: {
     padding: '1.5rem',
@@ -484,9 +501,10 @@ const styles = {
     fontWeight: '500',
   },
   metricValue: {
-    fontSize: '1.1rem',
+    fontSize: '1.15rem',
     fontWeight: '700',
     color: 'var(--text-primary)',
+    letterSpacing: '-0.02em',
   },
   noMetrics: {
     padding: '2rem 1rem',
@@ -523,7 +541,7 @@ const styles = {
   progressBarFill: {
     height: '100%',
     borderRadius: '4px',
-    transition: 'width 0.5s ease-out',
+    transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
   },
   uptimeContainer: {
     display: 'flex',
