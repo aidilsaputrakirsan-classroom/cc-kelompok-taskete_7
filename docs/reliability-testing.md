@@ -34,30 +34,34 @@ Semua container harus berada pada status running sebelum pengujian dilakukan.
 | simcuti-cuti-db      | Up (healthy) |
 
 
-## 3. Skenario Pengujian Service Down Testing
-
+## Test Scenario 1 Service Down
 Memastikan sistem dapat menangani kondisi ketika Auth Service tidak tersedia dan mencegah terjadinya cascading failure.
 
 ##### Cara Reproduce
 
 1. Jalankan seluruh container.
+```text
+docker compose ps
+```
 2. Matikan Auth Service 
 
 ```text
 docker compose stop auth-service
 ```
 
-3. Kirim request ke endpoint yang membutuhkan autentikasi.
-   ```powershell
-    curl.exe -s http://localhost/items
-    ```
+2. Matikan Auth Service 
+   
+```text
+docker compose stop auth-service
+```
 
-4. Periksa health endpoint
-    ```powershell
-    curl.exe -s http://localhost/items/health
-    ```
+3. Verifikasi Auth Service
+```text
+docker compose ps
+```
 
-5. Lakukan request berulang hingga circuit breaker aktif.
+4. Periksa request endpoint yang membutuhkan autentikasi
+
 
 ##### Expected Behavior 
 
