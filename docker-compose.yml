@@ -30,6 +30,12 @@ services:
       timeout: 5s
       retries: 5
 
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
   # =====================================================
   # CUTI DATABASE
   # =====================================================
@@ -56,6 +62,12 @@ services:
       timeout: 5s
       retries: 5
 
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
   # =====================================================
   # AUTH SERVICE
   # =====================================================
@@ -71,12 +83,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres123@auth-db:5432/auth_db
       SECRET_KEY: super-secret-key
+      SERVICE_NAME: auth-service
+      LOG_LEVEL: INFO
 
     ports:
       - "8001:8001"
 
     networks:
       - simcuti-network
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: auth-service
 
     depends_on:
       auth-db:
@@ -93,6 +114,12 @@ services:
       retries: 5
       start_period: 30s
 
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+
   # =====================================================
   # CUTI SERVICE (item-service)
   # =====================================================
@@ -108,12 +135,21 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres123@cuti-db:5432/cuti_db
       AUTH_SERVICE_URL: http://auth-service:8001
+      SERVICE_NAME: item-service
+      LOG_LEVEL: INFO
 
     ports:
       - "8002:8002"
 
     networks:
       - simcuti-network
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        tag: item-service
 
     depends_on:
       cuti-db:
@@ -131,6 +167,12 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
 
   # =====================================================
   # FRONTEND
@@ -156,6 +198,19 @@ services:
     depends_on:
       - auth-service
       - cuti-service
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
 
   # =====================================================
   # API GATEWAY (NGINX)
@@ -183,6 +238,12 @@ services:
         condition: service_healthy
       frontend:
         condition: service_started
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
 
 # =====================================================
 # VOLUMES

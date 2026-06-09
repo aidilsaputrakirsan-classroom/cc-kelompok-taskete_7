@@ -57,7 +57,7 @@ class TestAuthenticationFlow:
     def test_register_user(self, gateway_url):
         """Test 4: Can register a new user."""
         import time
-        email = f"register-test-{int(time.time())}@test.com"
+        email = f"register-test-{int(time.time())}@example.com"
         
         response = httpx.post(
             f"{gateway_url}/auth/register",
