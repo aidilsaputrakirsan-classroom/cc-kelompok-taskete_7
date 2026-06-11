@@ -10,7 +10,8 @@
 # 2. test-item-service: pytest Item Service (cuti)
 # 3. test-backend: pytest monolith legacy (DeployCC)
 # 4. test-frontend: vitest + build
-# 5. build-docker: Build image per service
+# 5. integration-test: docker compose up → pytest tests/integration/
+# 6. build-docker: Build image per service
 
 name: CI Pipeline
 
@@ -175,7 +176,130 @@ jobs:
         run: npm run build
 
   # ================================
-  # JOB 5: Build Docker Images (per service)
+  # JOB 5: Integration Tests (Modul 13)
+  # ================================
+  integration-test:
+    name: "🔗 Integration Tests"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs:
+      - test-auth-service
+      - test-item-service
+      - test-backend
+      - test-frontend
+
+    steps:
+      - name: "📥 Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "🐍 Setup Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "📥 Install integration test dependencies"
+        run: |
+          python -m pip install --upgrade pip
+          pip install httpx pytest
+
+      - name: "🐳 Pull base images (retry on Docker Hub timeout)"
+        env:
+          DOCKER_CLIENT_TIMEOUT: 300
+          COMPOSE_HTTP_TIMEOUT: 300
+        run: |
+          set -e
+          images=("postgres:16-alpine" "nginx:alpine")
+          for image in "${images[@]}"; do
+            pulled=0
+            for attempt in $(seq 1 5); do
+              echo "Pulling ${image} (attempt ${attempt}/5)..."
+              if docker pull "${image}"; then
+                pulled=1
+                break
+              fi
+              echo "Pull failed, waiting before retry..."
+              sleep $((attempt * 15))
+            done
+            if [ "${pulled}" -ne 1 ]; then
+              echo "Failed to pull ${image} after 5 attempts"
+              exit 1
+            fi
+          done
+
+      - name: "🐳 Start all services"
+        env:
+          DOCKER_CLIENT_TIMEOUT: 300
+          COMPOSE_HTTP_TIMEOUT: 300
+        run: |
+          set -e
+          for attempt in $(seq 1 3); do
+            echo "docker compose up (attempt ${attempt}/3)..."
+            if docker compose up -d --build; then
+              exit 0
+            fi
+            echo "compose up failed, retrying in 20s..."
+            docker compose down -v --remove-orphans || true
+            sleep 20
+          done
+          exit 1
+
+      - name: "⏳ Wait for gateway and services"
+        run: |
+          echo "Waiting for all endpoints to be ready..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost/health > /dev/null \
+              && curl -sf http://localhost/auth/health > /dev/null \
+              && curl -sf http://localhost/items/health > /dev/null; then
+              echo "All endpoints ready (attempt $i)"
+              curl -s http://localhost/health
+              curl -s http://localhost/auth/health
+              curl -s http://localhost/items/health
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Services not ready after 180s"
+          docker compose ps
+          docker compose logs --tail=40 auth-service cuti-service gateway
+          exit 1
+
+      - name: "🧪 Run integration tests"
+        env:
+          GATEWAY_URL: http://localhost
+        run: pytest tests/integration/ -v --tb=short
+
+      - name: "📋 Debug logs on failure"
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=50
+
+      - name: "📦 Export Docker logs for artifacts"
+        if: always()
+        run: |
+          mkdir -p ci-logs
+          docker compose ps > ci-logs/compose-ps.txt 2>&1 || true
+          docker compose logs --no-color > ci-logs/all-services.log 2>&1 || true
+          for svc in auth-service auth-db cuti-service cuti-db gateway frontend; do
+            docker compose logs --no-color "$svc" > "ci-logs/${svc}.log" 2>&1 || true
+          done
+          echo "Exported $(find ci-logs -type f | wc -l) log file(s)"
+
+      - name: "📤 Upload Docker logs as CI artifacts"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-docker-logs
+          path: ci-logs/
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: "🛑 Stop services"
+        if: always()
+        run: docker compose down -v --remove-orphans
+
+  # ================================
+  # JOB 6: Build Docker Images (per service)
   # ================================
   build-docker:
     name: "🐳 Build Docker"
@@ -185,6 +309,7 @@ jobs:
       - test-item-service
       - test-backend
       - test-frontend
+      - integration-test
 
     steps:
       - name: "📥 Checkout code"

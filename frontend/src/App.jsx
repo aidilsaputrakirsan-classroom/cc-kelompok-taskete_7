@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import KaryawanDashboard from './pages/KaryawanDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceUnavailablePage from './pages/ServiceUnavailablePage';
+import StatusPage from './pages/StatusPage';
 import AboutPage from './components/AboutPage';
 import { Spinner, DegradedBanner } from './components/shared';
 import './App.css';
@@ -16,10 +17,15 @@ export default function App() {
   const { user, loading } = useAuth();
   const { isUnavailable } = useServiceStatus();
   const [showAbout, setShowAbout] = useState(false);
+  const [showStatus, setShowStatus] = useState(false);
 
   // Jika server/gateway offline total (503), tampilkan halaman fallback blocking
   if (isUnavailable) {
     return <ServiceUnavailablePage />;
+  }
+
+  if (showStatus) {
+    return <StatusPage onBack={() => setShowStatus(false)} />;
   }
 
   if (loading) {
@@ -47,9 +53,9 @@ export default function App() {
         ) : !user ? (
           <LoginPage onShowAbout={() => setShowAbout(true)} />
         ) : user.role === 'admin' ? (
-          <AdminDashboard onShowAbout={() => setShowAbout(true)} />
+          <AdminDashboard onShowAbout={() => setShowAbout(true)} onShowStatus={() => setShowStatus(true)} />
         ) : (
-          <KaryawanDashboard onShowAbout={() => setShowAbout(true)} />
+          <KaryawanDashboard onShowAbout={() => setShowAbout(true)} onShowStatus={() => setShowStatus(true)} />
         )}
       </div>
     </div>
