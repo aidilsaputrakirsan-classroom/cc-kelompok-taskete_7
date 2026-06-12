@@ -2,9 +2,58 @@
 
 ![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-taskete_7/actions/workflows/ci.yml/badge.svg)
 
-Aplikasi ini adalah platform manajemen Sumber Daya Manusia (SDM) digital yang dirancang untuk menyederhanakan proses pengajuan dan pemantauan cuti karyawan secara real-time. Dikembangkan khusus untuk perusahaan skala menengah, sistem ini memungkinkan karyawan untuk memeriksa sisa jatah cuti mereka secara mandiri dan mengajukan permohonan izin melalui antarmuka web yang responsif. Dengan integrasi sistem approval otomatis, manajer dapat meninjau, menyetujui, atau menolak permohonan cuti hanya dengan satu klik, sehingga menghilangkan birokrasi manual yang lambat.
+![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-taskete_7/actions/workflows/ci.yml/badge.svg)
 
-Masalah utama yang diselesaikan oleh aplikasi ini adalah ketidakefisienan dalam pencatatan cuti konvensional yang sering kali masih menggunakan formulir kertas atau spreadsheet manual yang rentan terhadap kesalahan data. Dengan memanfaatkan infrastruktur Cloud Computing, sistem ini menjamin ketersediaan data yang tinggi (high availability) dan aksesibilitas dari mana saja. Hal ini memberikan transparansi penuh antara pihak manajemen dan karyawan, sekaligus mengurangi beban administratif tim HR dalam mengelola sinkronisasi data sisa cuti yang akurat.
+## 🌐 Live Demo
+
+| Service | URL |
+|---------|-----|
+| Frontend| https://cc-kelompok-taskete7.akhzafachrozy.my.id/|
+| Backend API | https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/health |
+| API Docs (Swagger) |https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/docs |
+
+## 🔄 CI/CD
+
+![CI](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-taskete_7/actions/workflows/ci.yml/badge.svg)
+
+Pipeline otomatis berjalan saat push ke main:
+1. ✅ Test backend (pytest)
+2. ✅ Test frontend (Vitest)
+3. ✅ Build Docker images
+4. 🚀 Deploy ke Deploy SI
+
+## 📌 Project Overview
+
+### Tentang Aplikasi
+Aplikasi ini merupakan platform manajemen Sumber Daya Manusia (SDM) berbasis digital yang dirancang untuk membantu perusahaan dalam mengelola proses pengajuan dan pemantauan cuti karyawan secara lebih efektif, transparan, dan real-time. Sistem ini menyediakan layanan pengelolaan cuti berbasis web yang memungkinkan karyawan melakukan pengecekan sisa hak cuti, mengajukan permohonan cuti, serta memantau status pengajuan secara mandiri melalui antarmuka yang mudah digunakan.
+
+Selain itu, aplikasi ini menyediakan sistem approval terintegrasi yang membantu manajer atau pihak yang berwenang dalam melakukan proses verifikasi, persetujuan, maupun penolakan pengajuan cuti secara cepat tanpa membutuhkan proses administrasi manual.
+
+
+### Latar Belakang Masalah
+
+Sebelum menggunakan sistem digital, proses pengelolaan cuti pada banyak perusahaan masih dilakukan secara manual menggunakan formulir fisik maupun spreadsheet. Metode tersebut memiliki beberapa kendala, seperti risiko kesalahan pencatatan data, sulitnya melakukan pelacakan riwayat pengajuan, keterlambatan proses persetujuan, serta kesulitan dalam memastikan informasi sisa cuti karyawan tetap akurat.
+
+Permasalahan tersebut dapat menghambat produktivitas karyawan maupun tim Human Resource (HR) karena membutuhkan waktu tambahan untuk melakukan pengecekan dan sinkronisasi data secara berkala.
+
+### Solusi yang Ditawarkan
+
+Aplikasi ini menghadirkan solusi berupa sistem manajemen cuti berbasis cloud yang memungkinkan seluruh proses pengajuan hingga persetujuan cuti dilakukan secara terintegrasi dalam satu platform. Dengan memanfaatkan teknologi Cloud Computing, aplikasi menyediakan akses data yang lebih fleksibel, meningkatkan ketersediaan layanan (high availability), serta memungkinkan pengguna mengakses sistem dari berbagai lokasi.
+
+Sistem ini juga memberikan transparansi antara karyawan, manajer, dan tim HR melalui informasi status pengajuan yang dapat dipantau secara real-time, sekaligus mengurangi beban administratif dalam pengelolaan data cuti.
+
+### Target Pengguna
+
+Aplikasi ini ditujukan untuk perusahaan skala menengah yang membutuhkan sistem pengelolaan cuti digital, dengan pengguna utama:
+
+- **Karyawan**  
+  Menggunakan sistem untuk melihat informasi sisa cuti, mengajukan permohonan cuti, dan memantau status pengajuan.
+
+- **Manajer/Supervisor**  
+  Menggunakan sistem untuk melakukan review, memberikan persetujuan, atau menolak pengajuan cuti karyawan.
+
+- **Tim Human Resource (HR)**  
+  Menggunakan sistem untuk memantau data cuti karyawan, mengurangi pekerjaan administratif manual, dan memastikan pengelolaan data cuti lebih akurat.
 
 ## 👥 Tim
 
@@ -29,28 +78,40 @@ Masalah utama yang diselesaikan oleh aplikasi ini adalah ketidakefisienan dalam 
 ## 🏗️ Architecture
 
 ```mermaid
-graph LR
-    subgraph "Client Side (Broad Network Access Ready)"
-        A[User/Karyawan] -->|HTTP Request| B(Web Browser)
-    end
+flowchart TD
 
-    subgraph "Infrastructure (Local/On-Premise)"
-        B -->|Port 5000| C[Python Backend - Flask/FastAPI]
-        
-        subgraph "Backend Logic"
-            C --> D{Business Logic}
-            D -->|Check Identity| E[Data Tim / Team Data]
-            D -->|Validation| F[Logika Pengajuan Cuti]
-        end
-        
-        subgraph "Data Storage (Resource Pooling Concept)"
-            E --- G[(Local JSON Storage)]
-            F --- G
-        end
-    end
+    USER["👤 User / Browser"]
+    GW["🔀 API Gateway<br/>Nginx :80"]
+    FE["💻 Frontend<br/>React :3000"]
+    AS["🔐 Auth Service<br/>:8001"]
+    CS["📋 Cuti Service<br/>:8002"]
+
+    ADB[("🗄️ auth-db<br/>Port 5434")]
+    CDB[("🗄️ cuti-db<br/>Port 5433")]
+
+    USER -->|HTTP| GW
+    GW -->|/| FE
+    GW -->|/auth/*| AS
+    GW -->|/items/*| CS
+
+    AS -->|PostgreSQL| ADB
+    CS -->|PostgreSQL| CDB
+
+    CS -->|Verify Token<br/>+ Retry<br/>+ Circuit Breaker| AS
+    
+    CS -.->|Health Check| AS
+    CS -.->|Health Check| CDB
+    
 ```
+## 📈 Architecture Evolution
 
-*(Diagram ini akan berkembang setiap minggu)*
+| Phase | Architecture |
+|---------|--------------|
+| Week 1–4 | Monolith (FastAPI + React + PostgreSQL) |
+| Week 5–7 | Docker Containerization |
+| Week 9–11 | CI/CD with GitHub Actions |
+| Week 12–14 | Cloud Deployment on Railway |
+| Week 15–16 | Security Hardening & Final Documentation |
 
 ## 🚀 Getting Started
 
@@ -111,6 +172,44 @@ Untuk menghentikan semua service, jalankan perintah berikut:
 docker compose down
 ```
 
+## API Documentation
+
+🔐 AUTH SERVICE (:8001)
+
+
+| Method | Endpoint    | Description                                                  |
+| ------ | ----------- |------------------------------------------------------------  |
+| POST   | `/register` | Register user baru                                           |
+| POST   | `/login`    | Login dan mendapatkan JWT token                              |
+| GET    | `/verify`   | Verifikasi token (internal use, dipanggil oleh Item Service) |
+| GET    | `/health`   | Memeriksa status kesehatan service                           |
+| GET    | `/metrics`  | Menampilkan metrics service dan error rate                   |
+
+
+📋 ITEM/CUTI SERVICE (:8002)
+
+| Method | Endpoint        | Description                                                                        |
+| ------ | --------------- | ---------------------------------------------------------------------------------- |
+| POST   | `/items`        | Membuat pengajuan cuti baru                                                        |
+| GET    | `/items`        | Menampilkan daftar pengajuan cuti milik pengguna (mendukung search dan pagination) |
+| GET    | `/items/{id}`   | Menampilkan detail pengajuan cuti berdasarkan ID                                   |
+| PUT    | `/items/{id}`   | Memperbarui data pengajuan cuti                                                    |
+| DELETE | `/items/{id}`   | Menghapus pengajuan cuti                                                           |
+| GET    | `/items/stats`  | Menampilkan statistik data cuti (mendukung graceful degradation)                   |
+| GET    | `/items/public` | Menampilkan data publik yang dapat diakses tanpa autentikasi                       |
+| GET    | `/health`       | Memeriksa status kesehatan service dan dependensinya                               |
+| GET    | `/metrics`      | Menampilkan metrics service dan error rate                                         |
+
+### Via Gateway (Port 80)
+
+| Service        | Direct URL                      | Gateway URL                      |
+| -------------- | ------------------------------- | -------------------------------- |
+| Gateway Health | -                               | `http://localhost/health`        |
+| Auth Health    | `http://localhost:8001/health`  | `http://localhost/auth/health`   |
+| Auth Metrics   | `http://localhost:8001/metrics` | `http://localhost/auth/metrics`  |
+| Item Health    | `http://localhost:8002/health`  | `http://localhost/items/health`  |
+| Item Metrics   | `http://localhost:8002/metrics` | `http://localhost/items/metrics` |
+
 ## 🐳 Docker Compose Commands
 
 Berikut adalah beberapa perintah dasar Docker Compose yang digunakan:
@@ -123,6 +222,16 @@ Berikut adalah beberapa perintah dasar Docker Compose yang digunakan:
 | docker compose logs            | Menampilkan log dari semua service           |
 | docker compose ps              | Menampilkan status container                 |
 | docker compose up -d --build   | Build ulang image lalu menjalankan service   |
+
+
+## 📄 Documentation
+
+- [Architecture Guide](docs/architecture.md)
+- [Deployment Guide](docs/deployment-guide.md)
+- [Operations Guide](docs/operations-guide.md)
+- [API Contract](docs/api-contract.md)
+- [Release Notes](docs/release-notes-m3.md)
+
 
 ## 📅 Roadmap
 
@@ -565,23 +674,6 @@ Berikut beberapa perintah yang digunakan selama proses development:
    git pull origin main
 
 
-## 🌐 Live Demo
-
-| Service | URL |
-|---------|-----|
-| Frontend| https://cc-kelompok-taskete7.akhzafachrozy.my.id/|
-| Backend API | https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/health |
-| API Docs (Swagger) |https://cc-kelompok-taskete7.akhzafachrozy.my.id/api/docs |
-
-## 🔄 CI/CD
-
-![CI](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-taskete_7/actions/workflows/ci.yml/badge.svg)
-
-Pipeline otomatis berjalan saat push ke main:
-1. ✅ Test backend (pytest)
-2. ✅ Test frontend (Vitest)
-3. ✅ Build Docker images
-4. 🚀 Deploy ke Deploy SI
 
 
 
