@@ -65,8 +65,9 @@ def auth_headers(client):
         "name": "Test User"
     })
     # Login
-    response = client.post("/auth/login", json={
-        "email": "test@example.com",
+    response = client.post("/auth/login", data={
+        "grant_type": "password",
+        "username": "test@example.com",
         "password": "TestPassword123"
     })
     token = response.json()["access_token"]
