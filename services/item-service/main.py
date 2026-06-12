@@ -246,7 +246,22 @@ async def get_item(
     user: dict = Depends(verify_token_with_auth_service),
     db: Session = Depends(get_db),
 ):
-    """Ambil item by ID."""
+    """
+    Ambil detail item by ID — requires authentication.
+    
+    User hanya bisa akses item miliknya (owner_id check).
+    
+    Args:
+        item_id: ID item yang ingin diambil
+        user: User yang login (dari token verification)
+        db: Database session
+    
+    Returns:
+        ItemResponse dengan detail item
+        
+    Raises:
+        404: Item tidak ditemukan atau bukan milik user
+    """
     item = db.query(Item).filter(
         Item.id == item_id, Item.owner_id == user["user_id"]
     ).first()
@@ -262,7 +277,24 @@ async def update_item(
     user: dict = Depends(verify_token_with_auth_service),
     db: Session = Depends(get_db),
 ):
-    """Update item."""
+    """
+    Update item — requires authentication.
+    
+    User hanya bisa update item miliknya. Update partial (send only changed fields).
+    
+    Args:
+        item_id: ID item yang diupdate
+        update_data: Data update (name, description, price, quantity)
+        user: User yang login
+        db: Database session
+    
+    Returns:
+        ItemResponse dengan data yang sudah diupdate
+        
+    Raises:
+        404: Item tidak ditemukan atau bukan milik user
+        422: Validation error dari Pydantic
+    """
     item = db.query(Item).filter(
         Item.id == item_id, Item.owner_id == user["user_id"]
     ).first()
@@ -282,7 +314,22 @@ async def delete_item(
     user: dict = Depends(verify_token_with_auth_service),
     db: Session = Depends(get_db),
 ):
-    """Hapus item."""
+    """
+    Hapus item — requires authentication.
+    
+    User hanya bisa delete item miliknya.
+    
+    Args:
+        item_id: ID item yang dihapus
+        user: User yang login
+        db: Database session
+    
+    Returns:
+        204 No Content jika berhasil
+        
+    Raises:
+        404: Item tidak ditemukan atau bukan milik user
+    """
     item = db.query(Item).filter(
         Item.id == item_id, Item.owner_id == user["user_id"]
     ).first()

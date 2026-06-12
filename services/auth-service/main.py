@@ -55,7 +55,12 @@ app.add_middleware(RequestLoggingMiddleware)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # JWT config
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError(
+        "❌ FATAL: SECRET_KEY not set in environment variables. "
+        "Set SECRET_KEY env var with a random string (min 32 chars)"
+    )
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_MINUTES", "30"))
 
@@ -105,7 +110,25 @@ def get_metrics():
 
 @app.post("/register", response_model=UserResponse, status_code=201)
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
-    """Register user baru."""
+    """
+    Register user baru.
+    
+    Validasi:
+    - Email harus unik dan format valid (EmailStr)
+    - Password: min 8 chars, 1 uppercase, 1 digit, max 128 chars
+    - Name: 2-200 karakter
+    
+    Args:
+        user_data: Data register (email, password, name)
+        db: Database session
+    
+    Returns:
+        UserResponse dengan data user yang terbuat
+        
+    Raises:
+        400: Email sudah terdaftar atau validasi gagal
+        422: Validation error dari Pydantic
+    """
     # Check duplicate email
     existing = db.query(User).filter(User.email == user_data.email).first()
     if existing:
@@ -124,7 +147,27 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
-    """Login dan dapatkan JWT token."""
+    """
+    Login dan dapatkan JWT token.
+    
+    Process:
+    1. Cari user by email
+    2. Verify password dengan bcrypt
+    3. Generate JWT token (expire dalam TOKEN_EXPIRE_MINUTES)
+    
+    Args:
+        login_data: Email dan password
+        db: Database session
+    
+    Returns:
+        TokenResponse dengan access_token (JWT) dan token_type
+        
+    Raises:
+        401: Email tidak ditemukan atau password salah
+        
+    Note:
+        Token berlaku selama TOKEN_EXPIRE_MINUTES. Setelah expired, user harus login lagi.
+    """
     user = db.query(User).filter(User.email == login_data.email).first()
     if not user or not pwd_context.verify(login_data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -140,8 +183,30 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/verify", response_model=TokenVerifyResponse)
 def verify_token(authorization: str = Header(...)):
     """
-    Verifikasi JWT token — dipanggil oleh service lain.
-    Service lain mengirim header: Authorization: Bearer <token>
+    Verifikasi JWT token — dipanggil oleh service lain (inter-service).
+    
+    INTERNAL ENDPOINT: Tidak boleh diakses oleh frontend, hanya oleh services lain.
+    
+    Request format:
+        Header: Authorization: Bearer <access_token>
+    
+    Process:
+    1. Extract token dari header
+    2. Decode JWT (check signature dan expiry)
+    3. Return user info (user_id, email, name)
+    
+    Args:
+        authorization: Authorization header dalam format "Bearer <token>"
+    
+    Returns:
+        TokenVerifyResponse dengan user_id, email, name
+        
+    Raises:
+        401: Token invalid, expired, atau format header salah
+    
+    Note:
+        Dipanggil oleh Item Service untuk verifikasi sebelum CRUD operations.
+        Circuit Breaker di Item Service menangani jika Auth Service down.
     """
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Invalid authorization header")
