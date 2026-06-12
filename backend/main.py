@@ -9,7 +9,7 @@ from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session  
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from sqlalchemy import text
 
@@ -21,6 +21,7 @@ from schemas import (
     HolidayCreate, HolidayResponse, HolidayListResponse,
     SAWResponse, SummaryStats,
     ItemCreate, ItemUpdate, ItemResponse, ItemListResponse, ItemStatsResponse,
+    DashboardResponse, LeaveCalculationResponse,
 )
 from auth import create_access_token, get_current_user, require_admin
 from models import User
@@ -174,12 +175,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     tags=["Auth"],
     summary="Login & Dapatkan Token",
 )
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
-    Login dengan email dan password. Mengembalikan JWT access token.
+    Login dengan email (di field username) dan password. Mengembalikan JWT access token.
     Token berlaku selama 12 jam.
     """
-    user = crud.authenticate_user(db=db, email=login_data.email, password=login_data.password)
+    user = crud.authenticate_user(db=db, email=form_data.username, password=form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -270,6 +271,42 @@ def all_leaves(
 ):
     """**Admin only.** Ambil semua pengajuan cuti dari seluruh karyawan."""
     return crud.get_all_leave_requests(db=db, skip=skip, limit=limit, status_filter=status_filter)
+
+
+@app.get(
+    "/leaves/calculate",
+    response_model=LeaveCalculationResponse,
+    tags=["Pengajuan Cuti"],
+    summary="Preview Kalkulasi Hari Kerja",
+)
+def calculate_leave_days(
+    start_date: str = Query(..., description="Tanggal mulai (YYYY-MM-DD)"),
+    end_date: str = Query(..., description="Tanggal selesai (YYYY-MM-DD)"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Preview kalkulasi hari kerja sebelum mengajukan cuti.
+    Menampilkan breakdown per-hari:
+    - Hari kerja efektif (yang memotong kuota)
+    - Hari weekend (Sabtu/Minggu) — TIDAK memotong kuota
+    - Hari libur nasional — TIDAK memotong kuota
+    """
+    from datetime import date as date_type
+    try:
+        sd = date_type.fromisoformat(start_date)
+        ed = date_type.fromisoformat(end_date)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Format tanggal tidak valid. Gunakan format YYYY-MM-DD.",
+        )
+    if ed < sd:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tanggal selesai harus setelah tanggal mulai.",
+        )
+    return crud.get_date_breakdown(sd, ed, db)
 
 
 @app.get(
@@ -491,6 +528,85 @@ def get_summary(
 ):
     """**Admin only.** Statistik ringkasan pengajuan cuti seluruh perusahaan."""
     return crud.get_summary_stats(db=db)
+
+
+# ==================== DASHBOARD ENDPOINTS ====================
+
+@app.get(
+    "/dashboard",
+    response_model=DashboardResponse,
+    tags=["Dashboard"],
+    summary="[ADMIN] Dashboard Lengkap",
+)
+def get_dashboard(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """
+    **Admin only.** Dashboard lengkap dengan:
+    - Statistik ringkasan (total karyawan, pengajuan, approval rate)
+    - Tren bulanan tahun berjalan
+    - Breakdown per departemen
+    - 10 pengajuan pending terbaru
+    """
+    return crud.get_dashboard_data(db=db)
+
+
+@app.get(
+    "/dashboard/export/excel",
+    tags=["Dashboard"],
+    summary="[ADMIN] Export Data Cuti ke Excel",
+)
+def export_excel(
+    status_filter: Optional[str] = Query(None, alias="status",
+                                         description="Filter: pending/approved/rejected"),
+    year: Optional[int] = Query(None, description="Filter tahun"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """
+    **Admin only.** Download laporan data cuti dalam format Excel (.xlsx).
+    Mendukung filter berdasarkan status dan tahun.
+    """
+    output = crud.generate_leaves_excel(db=db, status_filter=status_filter, year=year)
+    filename = f"laporan_cuti_{year or 'semua'}"
+    if status_filter:
+        filename += f"_{status_filter}"
+    filename += ".xlsx"
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get(
+    "/dashboard/export/pdf",
+    tags=["Dashboard"],
+    summary="[ADMIN] Export Data Cuti ke PDF",
+)
+def export_pdf(
+    status_filter: Optional[str] = Query(None, alias="status",
+                                         description="Filter: pending/approved/rejected"),
+    year: Optional[int] = Query(None, description="Filter tahun"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    """
+    **Admin only.** Download laporan data cuti dalam format PDF.
+    Mendukung filter berdasarkan status dan tahun.
+    """
+    output = crud.generate_leaves_pdf(db=db, status_filter=status_filter, year=year)
+    filename = f"laporan_cuti_{year or 'semua'}"
+    if status_filter:
+        filename += f"_{status_filter}"
+    filename += ".pdf"
+    return StreamingResponse(
+        output,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
 
 
 # ==================== ITEM ENDPOINTS ====================
