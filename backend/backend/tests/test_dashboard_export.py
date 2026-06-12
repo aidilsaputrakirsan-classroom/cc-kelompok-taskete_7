@@ -21,7 +21,7 @@ def _register_and_login(client, email, password, name, role="karyawan", departme
     if department:
         payload["department"] = department
     client.post("/auth/register", json=payload)
-    resp = client.post("/auth/login", json={"email": email, "password": password})
+    resp = client.post("/auth/login", data={"grant_type": "password", "username": email, "password": password})
     token = resp.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
 

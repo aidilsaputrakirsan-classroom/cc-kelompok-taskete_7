@@ -44,8 +44,9 @@ def test_login_success(client):
         "name": "Login User"
     })
     # Login
-    response = client.post("/auth/login", json={
-        "email": "login@example.com",
+    response = client.post("/auth/login", data={
+        "grant_type": "password",
+        "username": "login@example.com",
         "password": "MyPassword123"
     })
     assert response.status_code == 200
@@ -63,8 +64,9 @@ def test_login_wrong_password(client):
         "name": "User"
     })
     # Login dengan password salah
-    response = client.post("/auth/login", json={
-        "email": "wrongpass@example.com",
+    response = client.post("/auth/login", data={
+        "grant_type": "password",
+        "username": "wrongpass@example.com",
         "password": "WrongPassword"
     })
     assert response.status_code == 401
