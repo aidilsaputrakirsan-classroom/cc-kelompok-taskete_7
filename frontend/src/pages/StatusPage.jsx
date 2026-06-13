@@ -301,7 +301,7 @@ export default function StatusPage({ onBack }) {
           name="API Gateway"
           icon="🚪"
           healthUrl={`${API_URL}/health`}
-          metricsUrl={null}
+          metricsUrl={`${API_URL}/metrics`}
         />
       </div>
 
