@@ -113,7 +113,7 @@ def test_user(gateway_url):
     try:
         response = httpx.post(
             f"{gateway_url}/auth/login",
-            json={"email": email, "password": password},
+            data={"username": email, "password": password},
             timeout=10,
         )
         assert response.status_code == 200, f"Login failed: {response.text}"

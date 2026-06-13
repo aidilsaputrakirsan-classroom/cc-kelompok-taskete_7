@@ -78,8 +78,8 @@ class TestAuthenticationFlow:
         """Test 5: Can login and get token."""
         response = httpx.post(
             f"{gateway_url}/auth/login",
-            json={
-                "email": test_user["email"],
+            data={
+                "username": test_user["email"],
                 "password": test_user["password"]
             },
             timeout=10,

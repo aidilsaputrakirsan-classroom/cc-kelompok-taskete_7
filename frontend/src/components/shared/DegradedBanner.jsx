@@ -1,7 +1,5 @@
 /**
- * SIMCUTI — DegradedBanner (Shared Alert Component)
- * Tampilan banner notifikasi tipis di atas layar saat backend terdeteksi berjalan
- * dalam degraded mode (sebagian microservices down).
+ * SIMCUTI — DegradedBanner (Nordic Redesign)
  */
 import { useServiceStatus } from '../../context/ServiceStatusContext';
 import { Spinner } from './index';
@@ -16,7 +14,6 @@ export default function DegradedBanner() {
   if (degradedDetails) {
     Object.entries(degradedDetails).forEach(([service, status]) => {
       if (status !== 'healthy') {
-        // Konversi nama service agar lebih ramah dibaca
         const friendlyName = service.replace('_', ' ').replace('-', ' ');
         issueServices.push(friendlyName.toUpperCase());
       }
@@ -29,9 +26,9 @@ export default function DegradedBanner() {
 
   return (
     <div style={{
-      backgroundColor: '#fffbeb',
-      borderBottom: '1px solid #fef3c7',
-      padding: '0.625rem 1.5rem',
+      backgroundColor: 'var(--primary-light)',
+      borderBottom: '1px solid rgba(37, 99, 235, 0.15)',
+      padding: '0.75rem 2rem',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -39,36 +36,37 @@ export default function DegradedBanner() {
       position: 'sticky',
       top: 0,
       zIndex: 999,
-      fontFamily: "'Inter', sans-serif",
+      fontFamily: "inherit",
       animation: 'fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
+      boxShadow: 'var(--shadow-sm)'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flex: 1 }}>
         {/* Animated Caution Icon */}
         <span style={{
-          fontSize: '1.25rem',
+          fontSize: '1.2rem',
           display: 'inline-flex',
-          animation: 'pulse 1.5s infinite'
+          animation: 'pulse 1.8s infinite'
         }}>⚠️</span>
         
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <p style={{
             fontSize: '0.85rem',
             fontWeight: 700,
-            color: '#b45309',
+            color: 'var(--primary)',
             margin: 0,
-            lineHeight: 1.3
+            lineHeight: 1.3,
+            fontFamily: "'Outfit', sans-serif"
           }}>
             Sistem Berjalan dalam Mode Terbatas (Degraded Mode)
           </p>
           <p style={{
             fontSize: '0.75rem',
-            color: '#d97706',
+            color: 'var(--text-secondary)',
             margin: '0.15rem 0 0 0',
             fontWeight: 500,
             lineHeight: 1.3
           }}>
-            Beberapa dependensi sistem sedang offline. {issuesText} Anda tetap dapat memakai fitur dasar.
+            Beberapa dependensi sistem sedang offline. {issuesText} Anda tetap dapat menggunakan fitur dasar.
           </p>
         </div>
       </div>
@@ -78,28 +76,23 @@ export default function DegradedBanner() {
         <button
           onClick={checkHealth}
           disabled={isChecking}
+          className="btn btn-outline btn-sm"
           style={{
             backgroundColor: '#ffffff',
-            border: '1px solid #fde68a',
-            borderRadius: 'var(--radius-md)',
             padding: '0.375rem 0.75rem',
             fontSize: '0.75rem',
             fontWeight: 700,
-            color: '#b45309',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.15s ease',
+            color: 'var(--primary)',
+            borderColor: 'rgba(37, 99, 235, 0.25)',
             boxShadow: 'var(--shadow-sm)'
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#fef3c7';
-            e.currentTarget.style.borderColor = '#fcd34d';
+            e.currentTarget.style.backgroundColor = 'var(--primary-light)';
+            e.currentTarget.style.borderColor = 'var(--primary)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = '#ffffff';
-            e.currentTarget.style.borderColor = '#fde68a';
+            e.currentTarget.style.borderColor = 'rgba(37, 99, 235, 0.25)';
           }}
         >
           {isChecking ? (
@@ -108,9 +101,7 @@ export default function DegradedBanner() {
               <span>Memeriksa...</span>
             </>
           ) : (
-            <>
-              <span>Periksa Koneksi</span>
-            </>
+            <span>Periksa Koneksi</span>
           )}
         </button>
 
@@ -121,18 +112,19 @@ export default function DegradedBanner() {
           style={{
             background: 'none',
             border: 'none',
-            color: '#d97706',
+            color: 'var(--text-muted)',
             cursor: 'pointer',
-            fontSize: '1.1rem',
+            fontSize: '1.25rem',
             padding: '2px 6px',
             fontWeight: 700,
             borderRadius: '4px',
-            transition: 'background-color 0.15s'
+            transition: 'color 0.15s',
+            outline: 'none'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef3c7'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
         >
-          ×
+          &times;
         </button>
       </div>
     </div>

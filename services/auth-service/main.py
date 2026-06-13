@@ -216,6 +216,6 @@ def verify_token(authorization: str = Header(...)):
 
     return TokenVerifyResponse(
         user_id=int(payload["sub"]),
-        email=payload["email"],
-        name=payload["name"],
+        email=payload.get("email", ""),
+        name=payload.get("name", ""),
     )

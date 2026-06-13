@@ -1,4 +1,4 @@
-x# API Contract — Cloud App Microservices
+# API Contract — Cloud App Microservices
 
 ## Base URLs
 
