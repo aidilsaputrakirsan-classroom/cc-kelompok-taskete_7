@@ -219,18 +219,35 @@ export default function StatusPage({ onBack }) {
         }
       `}} />
 
-      <div style={styles.headerPanel}>
-        <div style={styles.headerLeft}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>
+        <div>
           <button onClick={onBack} style={styles.backButton}>
-            ← Kembali
+            ← Kembali ke Dashboard
           </button>
-          <div>
-            <h1 style={styles.title}>📊 System Status & Observability</h1>
-            <p style={styles.subtitle}>Pemantauan Kesehatan Layanan dan Performa Real-time SIMCUTI</p>
-          </div>
+          <h1 style={{
+            fontSize: '2rem', 
+            fontWeight: 800, 
+            color: 'var(--text-primary)', 
+            letterSpacing: '-0.04em',
+            fontFamily: "'Outfit', sans-serif",
+            marginTop: '1.25rem',
+            marginBottom: '0.35rem'
+          }}>
+            📊 Status & Observabilitas Sistem
+          </h1>
+          <div style={{ 
+            width: 32, 
+            height: 4, 
+            background: 'var(--primary)', 
+            marginTop: '0.5rem', 
+            borderRadius: 2 
+          }}></div>
+          <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
+            Pemantauan Kesehatan Layanan dan Performa Real-time SIMCUTI
+          </p>
         </div>
 
-        <div style={styles.headerRight}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
           <div style={styles.timeInfo}>
             <span style={styles.timeLabel}>Pembaruan Terakhir:</span>
             <span style={styles.timeValue}>{lastChecked.toLocaleTimeString()}</span>
@@ -304,51 +321,22 @@ const styles = {
     padding: '2.5rem',
     maxWidth: '1200px',
     margin: '0 auto',
-    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
     color: 'var(--text-primary)',
     animation: 'slide-in 0.4s ease-out',
   },
-  headerPanel: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: '1.5rem',
-    backgroundColor: '#ffffff',
-    padding: '2rem',
-    borderRadius: '16px',
-    border: '1px solid var(--border-color)',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
-    marginBottom: '2.5rem',
-  },
-  headerLeft: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '1.5rem',
-  },
   backButton: {
-    padding: '0.6rem 1.2rem',
+    padding: '0.6rem 1.25rem',
     backgroundColor: '#ffffff',
     color: 'var(--text-secondary)',
     border: '1px solid var(--border-color)',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-sm)',
     fontWeight: '600',
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    transition: 'all var(--transition-fast)',
     outline: 'none',
-    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.02)',
-  },
-  title: {
-    margin: 0,
-    fontSize: '1.75rem',
-    fontWeight: 800,
-    color: 'var(--text-primary)',
-    letterSpacing: '-0.03em',
-  },
-  subtitle: {
-    margin: '0.25rem 0 0 0',
-    fontSize: '0.9rem',
-    color: 'var(--text-muted)',
+    boxShadow: 'var(--shadow-sm)',
+    fontFamily: "'Outfit', sans-serif",
   },
   headerRight: {
     display: 'flex',
@@ -359,6 +347,7 @@ const styles = {
   timeInfo: {
     fontSize: '0.85rem',
     color: 'var(--text-muted)',
+    fontWeight: 500,
   },
   timeValue: {
     fontWeight: '700',
@@ -373,9 +362,9 @@ const styles = {
   refreshBadge: {
     position: 'relative',
     padding: '0.6rem 1.2rem',
-    borderRadius: '10px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
+    borderRadius: 'var(--radius-sm)',
+    backgroundColor: 'var(--bg-main)',
+    border: '1px solid var(--border-color)',
     fontSize: '0.85rem',
     fontWeight: '700',
     color: 'var(--text-primary)',
@@ -383,7 +372,8 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '120px',
+    width: '130px',
+    boxShadow: 'var(--shadow-sm)',
   },
   countdownBar: {
     position: 'absolute',
@@ -394,17 +384,19 @@ const styles = {
     transition: 'width 1s linear',
   },
   refreshButton: {
-    padding: '0.6rem 1.2rem',
+    padding: '0.6rem 1.25rem',
     backgroundColor: 'var(--primary)',
     color: '#ffffff',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-sm)',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
-    transition: 'all 0.15s ease',
+    transition: 'all var(--transition-fast)',
     cursor: 'pointer',
-    boxShadow: '0 1px 2px rgba(37, 99, 235, 0.2)',
+    boxShadow: '0 4px 10px rgba(37, 99, 235, 0.15)',
+    fontFamily: "'Outfit', sans-serif",
+    outline: 'none',
   },
   grid: {
     display: 'grid',
@@ -414,14 +406,15 @@ const styles = {
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: '16px',
+    borderRadius: 'var(--radius-lg)',
     border: '1px solid var(--border-color)',
     overflow: 'hidden',
-    transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+    boxShadow: 'var(--shadow-sm)',
+    transition: 'transform var(--transition-normal), box-shadow var(--transition-normal)',
   },
   cardHeader: {
-    padding: '1.5rem',
-    borderBottom: '1px solid #f1f5f9',
+    padding: '1.5rem 2rem',
+    borderBottom: '1px solid var(--border-color)',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -439,22 +432,25 @@ const styles = {
     fontSize: '1.1rem',
     fontWeight: 700,
     color: 'var(--text-primary)',
+    fontFamily: "'Outfit', sans-serif",
   },
   serviceUrl: {
     fontSize: '0.75rem',
     color: 'var(--text-muted)',
     fontFamily: 'monospace',
+    fontWeight: 500,
   },
   statusBadge: {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    padding: '0.35rem 0.8rem',
-    borderRadius: '20px',
+    padding: '0.35rem 0.85rem',
+    borderRadius: 'var(--radius-full)',
     fontSize: '0.75rem',
     fontWeight: '700',
     textTransform: 'uppercase',
     border: '1px solid',
+    letterSpacing: '0.02em',
   },
   statusPulse: {
     width: '8px',
@@ -464,77 +460,82 @@ const styles = {
     animation: 'pulse-dot 1.8s infinite ease-in-out',
   },
   cardBody: {
-    padding: '1.5rem',
+    padding: '2rem',
   },
   metricsGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '1rem',
-    marginBottom: '1.25rem',
+    gap: '1.25rem',
+    marginBottom: '1.5rem',
   },
   metricItem: {
     display: 'flex',
     flexDirection: 'column',
-    backgroundColor: '#f8fafc',
-    padding: '0.75rem 1rem',
-    borderRadius: '10px',
-    border: '1px solid #f1f5f9',
+    backgroundColor: 'var(--bg-main)',
+    padding: '0.75rem 1.1rem',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--border-color)',
   },
   metricLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.725rem',
     color: 'var(--text-muted)',
     marginBottom: '0.25rem',
-    fontWeight: '500',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
   },
   metricValue: {
-    fontSize: '1.15rem',
-    fontWeight: '700',
+    fontSize: '1.2rem',
+    fontWeight: 700,
     color: 'var(--text-primary)',
     letterSpacing: '-0.02em',
+    fontFamily: "'Outfit', sans-serif",
   },
   noMetrics: {
     padding: '2rem 1rem',
     textAlign: 'center',
     color: 'var(--text-muted)',
-    fontSize: '0.9rem',
+    fontSize: '0.875rem',
     fontStyle: 'italic',
-    backgroundColor: '#f8fafc',
-    borderRadius: '10px',
-    border: '1px solid #f1f5f9',
+    backgroundColor: 'var(--bg-main)',
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--border-color)',
   },
   errorRateContainer: {
-    marginTop: '1.25rem',
+    marginTop: '1.5rem',
   },
   errorRateHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: '0.8rem',
-    fontWeight: '600',
-    marginBottom: '0.4rem',
+    fontWeight: '650',
+    marginBottom: '0.5rem',
   },
   errorRateLabel: {
-    color: 'var(--text-muted)',
+    color: 'var(--text-secondary)',
   },
   errorRateValue: {
     fontWeight: '700',
   },
   progressBarBg: {
     height: '8px',
-    backgroundColor: '#e2e8f0',
-    borderRadius: '4px',
+    backgroundColor: 'var(--bg-main)',
+    borderRadius: 'var(--radius-full)',
     overflow: 'hidden',
+    border: '1px solid var(--border-color)',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-full)',
     transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
   },
   uptimeContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginTop: '1.25rem',
-    paddingTop: '0.75rem',
-    borderTop: '1px solid #f1f5f9',
+    alignItems: 'center',
+    marginTop: '1.5rem',
+    paddingTop: '0.85rem',
+    borderTop: '1px solid var(--border-color)',
     fontSize: '0.8rem',
   },
   uptimeLabel: {
@@ -566,25 +567,27 @@ const styles = {
     animation: 'pulse-dot 1.5s infinite ease-in-out',
   },
   footer: {
-    marginTop: '2.5rem',
+    marginTop: '3.5rem',
     textAlign: 'center',
   },
   infoBox: {
     display: 'inline-block',
     textAlign: 'left',
-    backgroundColor: '#eff6ff',
-    color: '#1e40af',
-    border: '1px solid #bfdbfe',
-    padding: '1rem 1.5rem',
-    borderRadius: '12px',
+    backgroundColor: 'var(--primary-light)',
+    color: 'var(--primary)',
+    border: '1px solid rgba(37, 99, 235, 0.15)',
+    padding: '1.1rem 1.75rem',
+    borderRadius: 'var(--radius-lg)',
     fontSize: '0.85rem',
     maxWidth: '800px',
-    lineHeight: '1.4',
-    marginBottom: '1.5rem',
+    lineHeight: '1.5',
+    marginBottom: '2rem',
+    boxShadow: 'var(--shadow-sm)',
   },
   academicInfo: {
     fontSize: '0.8rem',
     color: 'var(--text-muted)',
     margin: 0,
+    fontWeight: 500,
   }
 };
