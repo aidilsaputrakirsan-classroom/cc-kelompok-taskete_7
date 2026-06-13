@@ -186,7 +186,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email atau password salah.",
         )
-    token = create_access_token(data={"sub": str(user.id)})
+    token = create_access_token(data={
+        "sub": str(user.id),
+        "email": user.email,
+        "name": user.name
+    })
     return TokenResponse(access_token=token, token_type="bearer", user=user)
 
 

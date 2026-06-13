@@ -78,7 +78,13 @@ export const authAPI = {
 
   login: async (email, password) => {
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const params = new URLSearchParams();
+      params.append('username', email); // OAuth2 expects username
+      params.append('password', password);
+
+      const res = await api.post('/auth/login', params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      });
       return res.data; // { access_token, token_type, user }
     } catch (e) { handleError(e); }
   },
@@ -155,6 +161,30 @@ export const leavesAPI = {
     try {
       await api.delete(`/leaves/${id}`);
       return true;
+    } catch (e) { handleError(e); }
+  },
+
+  // Karyawan: preview kalkulasi hari kerja
+  calculate: async (startDate, endDate) => {
+    try {
+      const res = await api.get('/leaves/calculate', { params: { start_date: startDate, end_date: endDate } });
+      return res.data;
+    } catch (e) { handleError(e); }
+  },
+
+  // Admin: export data cuti ke Excel
+  exportExcel: async (params = {}) => {
+    try {
+      const res = await api.get('/dashboard/export/excel', { params, responseType: 'blob' });
+      return res.data;
+    } catch (e) { handleError(e); }
+  },
+
+  // Admin: export data cuti ke PDF
+  exportPdf: async (params = {}) => {
+    try {
+      const res = await api.get('/dashboard/export/pdf', { params, responseType: 'blob' });
+      return res.data;
     } catch (e) { handleError(e); }
   },
 };
