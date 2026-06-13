@@ -1,7 +1,7 @@
 /**
  * SIMCUTI — Shared Components (White & Blue Minimalist)
  */
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 /* ========== Spinner ========== */
 export function Spinner({ size = 'md', color = 'primary' }) {
@@ -10,6 +10,7 @@ export function Spinner({ size = 'md', color = 'primary' }) {
   
   const clr = color === 'primary' ? 'var(--primary)' : 
               color === 'gray' ? 'var(--text-muted)' : 
+              color === 'white' ? '#ffffff' : 
               'var(--primary)';
 
   return (
@@ -83,19 +84,20 @@ export function Toast({ message, type = 'info', onClose }) {
 export function useToast() {
   const [toast, setToast] = useState(null);
 
-  const show = (message, type = 'info', duration = 4000) => {
+  const show = useCallback((message, type = 'info', duration = 4000) => {
     setToast({ message, type });
     if (toastTimeout) clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => setToast(null), duration);
-  };
+  }, []);
 
-  const close = () => {
+  const close = useCallback(() => {
     setToast(null);
     if (toastTimeout) clearTimeout(toastTimeout);
-  };
+  }, []);
 
   return { toast, show, close };
 }
 
 export { default as DegradedBanner } from './DegradedBanner';
+export { default as Layout } from './Layout';
 

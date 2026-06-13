@@ -1,9 +1,6 @@
 /**
- * SIMCUTI — About Page
- * Informasi tim, tech stack, dan ringkasan proyek.
- * Dibuat oleh Lead Frontend sebagai tugas Modul 9 (Git Workflow).
+ * SIMCUTI — About Page (Nordic Redesign)
  */
-
 import { useState } from 'react';
 
 const TEAM = [
@@ -13,7 +10,7 @@ const TEAM = [
     role: 'Lead Backend',
     github: 'Noviansyahhh',
     emoji: '🛠️',
-    color: '#0891b2',
+    color: '#0d9488', // Teal
   },
   {
     name: 'Irwan Maulana',
@@ -21,7 +18,7 @@ const TEAM = [
     role: 'Lead Frontend',
     github: 'Irwannnnn',
     emoji: '🎨',
-    color: '#2563eb',
+    color: '#2563eb', // Electric Blue
   },
   {
     name: 'Rayhan Iqbal',
@@ -29,7 +26,7 @@ const TEAM = [
     role: 'Lead DevOps',
     github: 'RayhanIIqbal13',
     emoji: '⚙️',
-    color: '#eab308',
+    color: '#d97706', // Amber
   },
   {
     name: 'Amalia Tiara Rezfani',
@@ -37,7 +34,7 @@ const TEAM = [
     role: 'Lead QA & Docs',
     github: '10231012tiara',
     emoji: '📝',
-    color: '#16a34a',
+    color: '#16a34a', // Emerald
   },
 ];
 
@@ -53,7 +50,7 @@ const TECH_STACK = [
     category: 'Backend',
     icon: '⚡',
     items: ['FastAPI', 'Python 3', 'SQLAlchemy'],
-    color: '#059669',
+    color: '#0d9488',
     description: 'REST API berkinerja tinggi dengan FastAPI, dilengkapi ORM SQLAlchemy untuk manajemen data.',
   },
   {
@@ -75,8 +72,8 @@ const TECH_STACK = [
 const MILESTONES = [
   { phase: 'Fase 1', title: 'Foundation', weeks: 'Minggu 1-4', status: 'done', desc: 'Setup repo, Docker, dan dasar backend + frontend.' },
   { phase: 'Fase 2', title: 'Full-Stack App', weeks: 'Minggu 5-8', status: 'done', desc: 'Implementasi fitur CRUD, Auth, dan dashboard.' },
-  { phase: 'Fase 3', title: 'CI/CD & Deploy', weeks: 'Minggu 9-11', status: 'current', desc: 'Git workflow, branch protection, CI/CD pipeline.' },
-  { phase: 'Fase 4', title: 'Monitoring', weeks: 'Minggu 12-16', status: 'upcoming', desc: 'Logging, monitoring, dan presentasi akhir.' },
+  { phase: 'Fase 3', title: 'CI/CD & Deploy', weeks: 'Minggu 9-11', status: 'done', desc: 'Git workflow, branch protection, CI/CD pipeline.' },
+  { phase: 'Fase 4', title: 'Monitoring & Security', weeks: 'Minggu 12-16', status: 'done', desc: 'Logging, monitoring, rate-limiting, dan hardening.' },
 ];
 
 function AboutPage({ onBack }) {
@@ -102,8 +99,8 @@ function AboutPage({ onBack }) {
             Sistem Informasi Manajemen Cuti Karyawan
           </p>
           <p style={styles.heroDesc}>
-            Aplikasi cloud-native full-stack yang dibangun sebagai proyek mata kuliah
-            Komputasi Awan — Sistem Informasi, Institut Teknologi Kalimantan.
+            Aplikasi cloud-native full-stack yang dibangun sebagai proyek akhir mata kuliah
+            Komputasi Awan — Program Studi Sistem Informasi, Institut Teknologi Kalimantan.
           </p>
         </div>
       </div>
@@ -119,8 +116,18 @@ function AboutPage({ onBack }) {
               ...styles.tab,
               ...(activeTab === tab.id ? styles.tabActive : {}),
             }}
+            onMouseEnter={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.backgroundColor = '#f1f5f9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (activeTab !== tab.id) {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+              }
+            }}
           >
-            <span style={{ fontSize: '1.1rem' }}>{tab.icon}</span>
+            <span style={{ fontSize: '1.1rem', display: 'inline-flex' }}>{tab.icon}</span>
             {tab.label}
           </button>
         ))}
@@ -139,7 +146,7 @@ function AboutPage({ onBack }) {
           © 2026 SIMCUTI — Institut Teknologi Kalimantan
         </p>
         <p style={{ color: '#cbd5e1', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-          Cloud Computing SI ITK · Modul 9 – Git Workflow & Branching
+          Cloud Computing SI ITK · Kelompok Taskete
         </p>
       </div>
     </div>
@@ -161,14 +168,23 @@ function TeamSection() {
             className="fade-in"
             style={{
               ...styles.teamCard,
-              animationDelay: `${i * 0.1}s`,
-              borderTop: `3px solid ${member.color}`,
+              animationDelay: `${i * 0.08}s`,
+              borderTop: `4px solid ${member.color}`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-md)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
             }}
           >
             <div style={{
               ...styles.teamAvatar,
-              background: `linear-gradient(135deg, ${member.color}22, ${member.color}11)`,
+              background: `${member.color}10`,
               color: member.color,
+              border: `1px solid ${member.color}20`,
             }}>
               <span style={{ fontSize: '1.5rem' }}>{member.emoji}</span>
             </div>
@@ -177,12 +193,11 @@ function TeamSection() {
               ...styles.roleBadge,
               backgroundColor: `${member.color}12`,
               color: member.color,
-              border: `1px solid ${member.color}30`,
+              border: `1px solid ${member.color}25`,
             }}>
               {member.role}
             </span>
             <p style={styles.teamNim}>NIM: {member.nim}</p>
-            <p style={styles.teamFocus}>{member.focus}</p>
             <a
               href={`https://github.com/${member.github}`}
               target="_blank"
@@ -207,25 +222,25 @@ function TechSection() {
         desc="Teknologi yang digunakan dalam membangun SIMCUTI"
       />
 
-      {/* Architecture Diagram */}
-      <div style={styles.archCard}>
-        <h4 style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+      {/* Architecture Diagram Card */}
+      <div className="card" style={styles.archCard}>
+        <h4 style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)', marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           🏗️ Arsitektur Sistem
         </h4>
         <div style={styles.archFlow}>
           <div style={styles.archNode}>
-            <span style={{ fontSize: '1.5rem' }}>🌐</span>
-            <span style={styles.archLabel}>Browser</span>
+            <span style={{ fontSize: '1.5rem' }}>👤</span>
+            <span style={styles.archLabel}>User</span>
           </div>
           <span style={styles.archArrow}>→</span>
-          <div style={{ ...styles.archNode, borderColor: '#2563eb' }}>
-            <span style={{ fontSize: '1.5rem' }}>⚛️</span>
-            <span style={styles.archLabel}>React + Vite</span>
+          <div style={{ ...styles.archNode, borderColor: 'var(--primary)', background: 'var(--primary-light)' }}>
+            <span style={{ fontSize: '1.5rem' }}>🚪</span>
+            <span style={{ ...styles.archLabel, color: 'var(--primary)' }}>API Gateway</span>
           </div>
           <span style={styles.archArrow}>→</span>
-          <div style={{ ...styles.archNode, borderColor: '#059669' }}>
+          <div style={{ ...styles.archNode, borderColor: '#0d9488' }}>
             <span style={{ fontSize: '1.5rem' }}>⚡</span>
-            <span style={styles.archLabel}>FastAPI</span>
+            <span style={styles.archLabel}>Layanan API</span>
           </div>
           <span style={styles.archArrow}>→</span>
           <div style={{ ...styles.archNode, borderColor: '#7c3aed' }}>
@@ -233,8 +248,8 @@ function TechSection() {
             <span style={styles.archLabel}>PostgreSQL</span>
           </div>
         </div>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.75rem' }}>
-          Seluruh komponen dijalankan dalam Docker container via Docker Compose
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '1.5rem', fontWeight: 500 }}>
+          Seluruh komponen dijalankan dalam Docker Container dan dideploy pada layanan Railway Cloud
         </p>
       </div>
 
@@ -243,30 +258,27 @@ function TechSection() {
         {TECH_STACK.map((tech, i) => (
           <div
             key={i}
-            className="fade-in"
-            style={{
-              ...styles.techCard,
-              animationDelay: `${i * 0.1}s`,
-            }}
+            className="card"
+            style={styles.techCard}
           >
             <div style={styles.techHeader}>
-              <span style={{ fontSize: '1.75rem' }}>{tech.icon}</span>
+              <span style={{ fontSize: '1.75rem', display: 'inline-flex' }}>{tech.icon}</span>
               <div>
-                <h3 style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)' }}>
+                <h3 style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
                   {tech.category}
                 </h3>
               </div>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
               {tech.description}
             </p>
             <div style={styles.techTags}>
               {tech.items.map((item, j) => (
                 <span key={j} style={{
                   ...styles.techTag,
-                  backgroundColor: `${tech.color}10`,
+                  backgroundColor: `${tech.color}08`,
                   color: tech.color,
-                  border: `1px solid ${tech.color}25`,
+                  border: `1px solid ${tech.color}20`,
                 }}>
                   {item}
                 </span>
@@ -288,63 +300,60 @@ function TimelineSection() {
         desc="Fase pengembangan SIMCUTI selama 1 semester"
       />
       <div style={styles.timeline}>
-        {MILESTONES.map((m, i) => (
-          <div key={i} className="fade-in" style={{
-            ...styles.timelineItem,
-            animationDelay: `${i * 0.1}s`,
-          }}>
-            {/* Indicator */}
-            <div style={styles.timelineIndicator}>
-              <div style={{
-                ...styles.timelineDot,
-                backgroundColor: m.status === 'done' ? '#16a34a' :
-                  m.status === 'current' ? 'var(--primary)' : '#cbd5e1',
-                boxShadow: m.status === 'current' ? '0 0 0 4px var(--primary-light)' : 'none',
-              }} />
-              {i < MILESTONES.length - 1 && (
+        {MILESTONES.map((m, i) => {
+          const isDone = m.status === 'done';
+          const isCurrent = m.status === 'current';
+          return (
+            <div key={i} className="fade-in" style={styles.timelineItem}>
+              {/* Indicator */}
+              <div style={styles.timelineIndicator}>
                 <div style={{
-                  ...styles.timelineLine,
-                  backgroundColor: m.status === 'done' ? '#16a34a' : '#e2e8f0',
+                  ...styles.timelineDot,
+                  backgroundColor: isDone ? '#10b981' : isCurrent ? 'var(--primary)' : '#cbd5e1',
+                  boxShadow: isCurrent ? '0 0 0 4px var(--primary-light)' : 'none',
                 }} />
-              )}
-            </div>
-
-            {/* Content */}
-            <div style={{
-              ...styles.timelineCard,
-              borderLeft: m.status === 'current'
-                ? '3px solid var(--primary)'
-                : m.status === 'done'
-                  ? '3px solid #16a34a'
-                  : '3px solid #e2e8f0',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                <span style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  padding: '0.2rem 0.5rem',
-                  borderRadius: 4,
-                  backgroundColor: m.status === 'done' ? '#f0fdf4' :
-                    m.status === 'current' ? 'var(--primary-light)' : '#f8fafc',
-                  color: m.status === 'done' ? '#16a34a' :
-                    m.status === 'current' ? 'var(--primary)' : 'var(--text-muted)',
-                }}>
-                  {m.status === 'done' ? '✅ Selesai' :
-                    m.status === 'current' ? '🔵 Sedang Berjalan' : '⏳ Akan Datang'}
-                </span>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.weeks}</span>
+                {i < MILESTONES.length - 1 && (
+                  <div style={{
+                    ...styles.timelineLine,
+                    backgroundColor: isDone ? '#10b981' : '#e2e8f0',
+                  }} />
+                )}
               </div>
-              <h4 style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
-                {m.phase}: {m.title}
-              </h4>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem', lineHeight: 1.5 }}>
-                {m.desc}
-              </p>
+
+              {/* Content */}
+              <div style={{
+                ...styles.timelineCard,
+                borderLeft: isCurrent
+                  ? '3px solid var(--primary)'
+                  : isDone
+                    ? '3px solid #10b981'
+                    : '3px solid #e2e8f0',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: '0.2rem 0.5rem',
+                    borderRadius: 4,
+                    backgroundColor: isDone ? '#ecfdf5' : isCurrent ? 'var(--primary-light)' : '#f8fafc',
+                    color: isDone ? '#10b981' : isCurrent ? 'var(--primary)' : 'var(--text-muted)',
+                  }}>
+                    {isDone ? '✅ Selesai' : isCurrent ? '🔵 Sedang Berjalan' : '⏳ Akan Datang'}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{m.weeks}</span>
+                </div>
+                <h4 style={{ fontWeight: 700, fontSize: '0.9375rem', color: 'var(--text-primary)' }}>
+                  {m.phase}: {m.title}
+                </h4>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: '0.25rem', lineHeight: 1.5 }}>
+                  {m.desc}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -353,14 +362,14 @@ function TimelineSection() {
 /* ─── Shared Components ─── */
 function SectionHeader({ title, desc }) {
   return (
-    <div style={{ marginBottom: '2rem' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+    <div style={{ marginBottom: '2.5rem' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.03em', fontFamily: "'Outfit', sans-serif" }}>
         {title}
       </h2>
       <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
         {desc}
       </p>
-      <div style={{ width: 40, height: 4, background: 'var(--primary)', marginTop: '0.75rem', borderRadius: 2 }} />
+      <div style={{ width: 32, height: 4, background: 'var(--primary)', marginTop: '0.75rem', borderRadius: 2 }} />
     </div>
   );
 }
@@ -369,186 +378,187 @@ function SectionHeader({ title, desc }) {
 const styles = {
   wrapper: {
     minHeight: '100vh',
-    backgroundColor: '#fafafa',
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    backgroundColor: 'var(--bg-main)',
+    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
   },
 
-  /* Hero */
+  /* Hero Banner */
   hero: {
     position: 'relative',
-    background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)',
-    padding: '3rem 4rem 4rem',
-    color: 'white',
+    background: '#ffffff',
+    borderBottom: '1px solid var(--border-color)',
+    padding: '4.5rem 2rem 4rem',
+    color: 'var(--text-primary)',
+    textAlign: 'center',
   },
   backBtn: {
     position: 'absolute',
     top: '1.5rem',
     left: '2rem',
-    background: 'rgba(255,255,255,0.12)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    color: 'white',
-    padding: '0.5rem 1rem',
-    borderRadius: 8,
+    background: '#ffffff',
+    border: '1px solid var(--border-color)',
+    color: 'var(--text-secondary)',
+    padding: '0.5rem 1.1rem',
+    borderRadius: 'var(--radius-sm)',
     cursor: 'pointer',
     fontSize: '0.8125rem',
     fontWeight: 600,
-    backdropFilter: 'blur(8px)',
-    transition: 'all 0.2s ease',
+    transition: 'all 0.15s ease',
+    boxShadow: 'var(--shadow-sm)',
+    outline: 'none',
   },
   heroContent: {
-    maxWidth: 640,
+    maxWidth: 680,
     margin: '0 auto',
-    textAlign: 'center',
-    paddingTop: '1rem',
+    paddingTop: '0.5rem',
   },
   heroBadge: {
     display: 'inline-block',
-    background: 'rgba(255,255,255,0.15)',
-    border: '1px solid rgba(255,255,255,0.2)',
+    background: 'var(--primary-light)',
+    border: '1px solid rgba(37, 99, 235, 0.15)',
+    color: 'var(--primary)',
     padding: '0.35rem 1rem',
     borderRadius: 20,
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    letterSpacing: '0.02em',
-    marginBottom: '1rem',
-    backdropFilter: 'blur(8px)',
+    fontSize: '0.725rem',
+    fontWeight: 700,
+    letterSpacing: '0.05em',
+    marginBottom: '1.25rem',
+    textTransform: 'uppercase'
   },
   heroTitle: {
-    fontSize: '2.75rem',
+    fontSize: '3rem',
     fontWeight: 800,
     letterSpacing: '-0.04em',
     margin: '0 0 0.5rem',
+    fontFamily: "'Outfit', sans-serif"
   },
   heroSubtitle: {
     fontSize: '1.125rem',
-    opacity: 0.9,
+    color: 'var(--text-secondary)',
     fontWeight: 500,
     margin: '0 0 1rem',
   },
   heroDesc: {
     fontSize: '0.875rem',
-    opacity: 0.7,
+    color: 'var(--text-muted)',
     lineHeight: 1.6,
     margin: 0,
-    maxWidth: 520,
+    maxWidth: 560,
     marginLeft: 'auto',
     marginRight: 'auto',
   },
 
-  /* Tabs */
+  /* Tabbed Navigation */
   tabContainer: {
     display: 'flex',
     justifyContent: 'center',
     gap: '0.5rem',
     padding: '0 2rem',
-    marginTop: '-1.5rem',
+    marginTop: '-1.25rem',
     position: 'relative',
-    zIndex: 1,
+    zIndex: 10,
   },
   tab: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.5rem',
-    padding: '0.875rem 1.75rem',
-    borderRadius: 10,
+    padding: '0.8rem 1.5rem',
+    borderRadius: 'var(--radius-md)',
     border: '1px solid var(--border-color)',
-    background: 'white',
+    background: '#ffffff',
     fontSize: '0.875rem',
     fontWeight: 600,
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
+    transition: 'all var(--transition-fast)',
     color: 'var(--text-secondary)',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+    boxShadow: 'var(--shadow-sm)',
+    fontFamily: "'Outfit', sans-serif",
+    outline: 'none',
   },
   tabActive: {
     background: 'var(--primary)',
     color: 'white',
     borderColor: 'var(--primary)',
-    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
+    boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
   },
 
-  /* Content */
+  /* Grid Layouts */
   content: {
-    maxWidth: 1000,
+    maxWidth: 1100,
     margin: '0 auto',
-    padding: '3rem 2rem',
+    padding: '3.5rem 2rem',
   },
 
-  /* Team Grid */
+  /* Developer Cards */
   teamGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '1.25rem',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))',
+    gap: '1.5rem',
   },
   teamCard: {
     background: 'white',
     borderRadius: 'var(--radius-lg)',
     border: '1px solid var(--border-color)',
-    padding: '1.75rem 1.25rem',
+    padding: '2rem 1.5rem',
     textAlign: 'center',
-    transition: 'all 0.25s ease',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    transition: 'all var(--transition-normal)',
+    boxShadow: 'var(--shadow-sm)',
   },
   teamAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
+    width: 60,
+    height: 60,
+    borderRadius: 'var(--radius-md)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: '0 auto 1rem',
+    margin: '0 auto 1.25rem',
   },
   teamName: {
     fontWeight: 700,
-    fontSize: '1rem',
+    fontSize: '1.05rem',
     color: 'var(--text-primary)',
     margin: '0 0 0.5rem',
   },
   roleBadge: {
     display: 'inline-block',
-    fontSize: '0.6875rem',
+    fontSize: '0.675rem',
     fontWeight: 700,
-    padding: '0.2rem 0.6rem',
+    padding: '0.2rem 0.65rem',
     borderRadius: 6,
     marginBottom: '0.75rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.02em',
   },
   teamNim: {
     fontSize: '0.75rem',
     color: 'var(--text-muted)',
-    marginBottom: '0.5rem',
-  },
-  teamFocus: {
-    fontSize: '0.8rem',
-    color: 'var(--text-secondary)',
-    lineHeight: 1.5,
     marginBottom: '0.75rem',
+    fontWeight: 500,
   },
   githubLink: {
-    fontSize: '0.75rem',
+    fontSize: '0.775rem',
     color: 'var(--primary)',
-    fontWeight: 600,
+    fontWeight: 700,
     textDecoration: 'none',
   },
 
-  /* Tech */
+  /* Tech Cards */
   techGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-    gap: '1.25rem',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+    gap: '1.5rem',
   },
   techCard: {
     background: 'white',
-    borderRadius: 'var(--radius-lg)',
+    padding: '1.75rem',
+    boxShadow: 'var(--shadow-sm)',
     border: '1px solid var(--border-color)',
-    padding: '1.5rem',
-    transition: 'all 0.25s ease',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
   },
   techHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '0.75rem',
-    marginBottom: '0.75rem',
+    marginBottom: '0.85rem',
   },
   techTags: {
     display: 'flex',
@@ -556,38 +566,38 @@ const styles = {
     gap: '0.4rem',
   },
   techTag: {
-    fontSize: '0.6875rem',
+    fontSize: '0.675rem',
     fontWeight: 700,
-    padding: '0.25rem 0.6rem',
+    padding: '0.25rem 0.65rem',
     borderRadius: 6,
   },
 
-  /* Architecture */
+  /* Architecture Diagram */
   archCard: {
     background: 'white',
-    borderRadius: 'var(--radius-lg)',
-    border: '1px solid var(--border-color)',
-    padding: '1.75rem',
-    marginBottom: '1.5rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    padding: '2rem',
+    marginBottom: '2rem',
+    boxShadow: 'var(--shadow-sm)',
   },
   archFlow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '0.75rem',
+    gap: '1rem',
     flexWrap: 'wrap',
+    marginTop: '1rem',
   },
   archNode: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '0.4rem',
-    padding: '1rem 1.25rem',
+    gap: '0.5rem',
+    padding: '1rem 1.5rem',
     borderRadius: 'var(--radius-md)',
     border: '1.5px solid var(--border-color)',
-    background: '#fafafa',
-    minWidth: 100,
+    background: '#ffffff',
+    minWidth: 120,
+    boxShadow: 'var(--shadow-sm)',
   },
   archLabel: {
     fontSize: '0.75rem',
@@ -600,7 +610,7 @@ const styles = {
     fontWeight: 700,
   },
 
-  /* Timeline */
+  /* Project Timeline */
   timeline: {
     display: 'flex',
     flexDirection: 'column',
@@ -608,13 +618,13 @@ const styles = {
   },
   timelineItem: {
     display: 'flex',
-    gap: '1.25rem',
+    gap: '1.5rem',
   },
   timelineIndicator: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    width: 20,
+    width: 24,
     flexShrink: 0,
   },
   timelineDot: {
@@ -626,23 +636,25 @@ const styles = {
   timelineLine: {
     width: 2,
     flex: 1,
-    minHeight: 20,
+    minHeight: 24,
   },
   timelineCard: {
     flex: 1,
     background: 'white',
     borderRadius: 'var(--radius-lg)',
     border: '1px solid var(--border-color)',
-    padding: '1.25rem 1.5rem',
-    marginBottom: '0.75rem',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+    padding: '1.5rem',
+    marginBottom: '1rem',
+    boxShadow: 'var(--shadow-sm)',
   },
 
-  /* Footer */
+  /* Page Footer */
   footer: {
     textAlign: 'center',
-    padding: '2rem',
+    padding: '2.5rem',
     borderTop: '1px solid var(--border-color)',
+    backgroundColor: '#ffffff',
+    marginTop: '2rem',
   },
 };
 
