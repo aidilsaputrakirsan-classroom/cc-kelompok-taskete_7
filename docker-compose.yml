@@ -85,6 +85,7 @@ services:
       SECRET_KEY: super-secret-key
       SERVICE_NAME: auth-service
       LOG_LEVEL: INFO
+      CORS_ORIGINS: "http://localhost,http://localhost:3000,http://localhost:5173"
 
     ports:
       - "8001:8001"
@@ -137,6 +138,7 @@ services:
       AUTH_SERVICE_URL: http://auth-service:8001
       SERVICE_NAME: item-service
       LOG_LEVEL: INFO
+      CORS_ORIGINS: "http://localhost,http://localhost:3000,http://localhost:5173"
 
     ports:
       - "8002:8002"
@@ -175,12 +177,70 @@ services:
           memory: 512M
 
   # =====================================================
+  # DATABASE (Monolith PostgreSQL 16)
+  # =====================================================
+  db:
+    image: postgres:16-alpine
+    container_name: simcuti-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: simcuti
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - simcuti-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d simcuti"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # =====================================================
+  # BACKEND (FastAPI Monolith Backend)
+  # =====================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: simcuti-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env.docker
+    ports:
+      - "8000:8000"
+    networks:
+      - simcuti-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    command: >
+      sh -c "
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        sleep 5 &&
+        python seed.py &&
+        wait
+      "
+
+  # =====================================================
   # FRONTEND
   # =====================================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost
 
     container_name: simcuti-frontend
 
@@ -198,6 +258,7 @@ services:
     depends_on:
       - auth-service
       - cuti-service
+      - backend
 
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://127.0.0.1/ || exit 1"]
@@ -236,6 +297,8 @@ services:
         condition: service_healthy
       cuti-service:
         condition: service_healthy
+      backend:
+        condition: service_healthy
       frontend:
         condition: service_started
 
@@ -251,6 +314,7 @@ services:
 volumes:
   auth_db_data:
   cuti_db_data:
+  pgdata:
 
 # =====================================================
 # NETWORKS
